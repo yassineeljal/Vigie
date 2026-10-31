@@ -31,7 +31,8 @@ export function ActionsScreen() {
     queryFn: () => unwrap(commands.listActions(view, status)),
   });
   const refresh = () => {
-    for (const k of ["actions", "score", "accounts"]) void qc.invalidateQueries({ queryKey: [k] });
+    for (const k of ["actions", "score", "accounts", "dashboard", "graph"])
+      void qc.invalidateQueries({ queryKey: [k] });
   };
   const complete = useMutation({
     mutationFn: (v: { id: number; mfa: MfaKind | null }) =>

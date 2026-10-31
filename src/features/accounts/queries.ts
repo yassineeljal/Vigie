@@ -31,7 +31,15 @@ function useInvalidating<V, R>(fn: (v: V) => Promise<R>) {
   return useMutation({
     mutationFn: fn,
     onSuccess: () => {
-      for (const key of ["accounts", "tags", "identities", "score", "actions"]) {
+      for (const key of [
+        "accounts",
+        "tags",
+        "identities",
+        "score",
+        "actions",
+        "dashboard",
+        "graph",
+      ]) {
         void qc.invalidateQueries({ queryKey: [key] });
       }
     },

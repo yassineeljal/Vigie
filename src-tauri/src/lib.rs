@@ -3,6 +3,7 @@ mod commands;
 mod crypto;
 mod domain;
 mod import;
+mod insights;
 mod intel;
 mod scheduler;
 mod scoring;
@@ -54,6 +55,11 @@ fn ipc_builder() -> Builder<tauri::Wry> {
             commands::intel::check_identity_emails,
             commands::intel::import_check_leaks,
             commands::intel::import_preview,
+            commands::insights::get_dashboard,
+            commands::insights::get_score_history,
+            commands::insights::get_recovery_graph,
+            commands::insights::get_notifications_enabled,
+            commands::insights::set_notifications_enabled,
             commands::score::get_score_report,
             commands::score::list_actions,
             commands::score::complete_action,
@@ -88,6 +94,7 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_notification::init())
         .invoke_handler(builder.invoke_handler())
         .setup(move |app| {
             builder.mount_events(app);

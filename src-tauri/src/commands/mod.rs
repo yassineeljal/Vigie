@@ -1,6 +1,7 @@
 //! Couche IPC : commandes exposées au front, types TypeScript générés par tauri-specta.
 
 pub mod import;
+pub mod insights;
 pub mod intel;
 pub mod inventory;
 pub mod score;

@@ -94,7 +94,7 @@ export function ImportScreen() {
           onCommit={(policy, excluded) =>
             guard(async () => {
               const outcome = await unwrap(commands.importCommit(policy, excluded));
-              for (const k of ["accounts", "tags", "score", "actions"])
+              for (const k of ["accounts", "tags", "score", "actions", "dashboard", "graph"])
                 void qc.invalidateQueries({ queryKey: [k] });
               setStep({ name: "done", outcome });
             })

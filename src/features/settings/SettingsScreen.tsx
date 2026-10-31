@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { commands } from "../../lib/ipc";
 import { errorMessage, unwrap } from "../../lib/result";
 import { VAULT_KEY } from "../../lib/useVault";
@@ -19,6 +19,22 @@ export function SettingsScreen({ autoLockMinutes }: { autoLockMinutes: number })
   const [oldPw, setOldPw] = useState("");
   const [newPw, setNewPw] = useState("");
   const [msg, setMsg] = useState<{ ok: boolean; text: string }>();
+
+  const notif = useQuery({
+    queryKey: ["notifications-enabled"],
+    queryFn: () => unwrap(commands.getNotificationsEnabled()).catch(() => false),
+  });
+  const [notifError, setNotifError] = useState<string>();
+
+  async function toggleNotifications(enabled: boolean) {
+    setNotifError(undefined);
+    try {
+      await unwrap(commands.setNotificationsEnabled(enabled));
+    } catch (e) {
+      setNotifError(errorMessage(e));
+    }
+    await qc.invalidateQueries({ queryKey: ["notifications-enabled"] });
+  }
 
   async function changeDelay(minutes: number) {
     await unwrap(commands.setAutoLockMinutes(minutes));
@@ -58,6 +74,22 @@ export function SettingsScreen({ autoLockMinutes }: { autoLockMinutes: number })
             </option>
           ))}
         </select>
+      </div>
+
+      <div className="space-y-1">
+        <label className="flex items-center gap-2 text-sm text-zinc-300">
+          <input
+            type="checkbox"
+            checked={notif.data ?? false}
+            onChange={(e) => void toggleNotifications(e.target.checked)}
+          />
+          Notifications macOS (nouvelle brèche pertinente, rappel hebdomadaire)
+        </label>
+        <p className="text-xs text-zinc-500">
+          Les notifications n'affichent jamais de noms de comptes. Elles ne partent que lorsque le
+          coffre est déverrouillé.
+        </p>
+        <ErrorText>{notifError}</ErrorText>
       </div>
 
       <form onSubmit={changePassword} className="max-w-sm space-y-3">
