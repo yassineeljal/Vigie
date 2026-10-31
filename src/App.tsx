@@ -3,6 +3,8 @@ import { commands } from "./lib/ipc";
 import { VAULT_KEY, useVaultLifecycle, useVaultStatus } from "./lib/useVault";
 import { useState } from "react";
 import { Button } from "./components/ui";
+import { ActionsScreen } from "./features/actions/ActionsScreen";
+import { ScoreBadge } from "./features/score/ScoreBadge";
 import { AccountsScreen } from "./features/accounts/AccountsScreen";
 import { ImportScreen } from "./features/import/ImportScreen";
 import { BreachesScreen } from "./features/breaches/BreachesScreen";
@@ -13,9 +15,9 @@ import { SettingsScreen } from "./features/settings/SettingsScreen";
 
 export default function App() {
   const qc = useQueryClient();
-  const [tab, setTab] = useState<"accounts" | "identities" | "import" | "breaches" | "settings">(
-    "accounts",
-  );
+  const [tab, setTab] = useState<
+    "accounts" | "actions" | "identities" | "import" | "breaches" | "settings"
+  >("accounts");
   const { data: status, isError } = useVaultStatus();
   useVaultLifecycle(status?.unlocked ?? false);
 
@@ -27,7 +29,10 @@ export default function App() {
   return (
     <main className="flex h-screen flex-col bg-zinc-950 p-6 text-zinc-100">
       <header className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Vigie</h1>
+        <div className="flex items-baseline gap-4">
+          <h1 className="text-2xl font-semibold">Vigie</h1>
+          <ScoreBadge />
+        </div>
         <nav aria-label="Navigation" className="flex gap-1">
           {(
             [
@@ -61,6 +66,7 @@ export default function App() {
       </header>
       <div className="min-h-0 flex-1">
         {tab === "accounts" && <AccountsScreen />}
+        {tab === "actions" && <ActionsScreen />}
         {tab === "identities" && <IdentitiesScreen />}
         {tab === "import" && <ImportScreen />}
         {tab === "breaches" && <BreachesScreen />}

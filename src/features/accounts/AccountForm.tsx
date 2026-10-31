@@ -11,6 +11,7 @@ import {
   STATUS_LABELS,
 } from "../../lib/labels";
 import { Button, ErrorText, Field } from "../../components/ui";
+import { WhyScore } from "../score/WhyScore";
 import { useDeleteAccount, useIdentities, useSaveAccount } from "./queries";
 
 const EMPTY: AccountInput = {
@@ -247,6 +248,7 @@ export function AccountForm({
           />
         </label>
 
+        {account && <WhyScore accountId={account.id} />}
         <ErrorText>{error}</ErrorText>
         <div className="flex items-center justify-between pt-2">
           <div className="flex gap-2">
