@@ -466,7 +466,9 @@ export type Identity_Serialize = {
 	account_id: number | null,
 };
 
-export type ImportFormat = "bitwarden_csv" | "bitwarden_json" | "apple_passwords" | "generic_csv";
+export type ImportFormat = "bitwarden_csv" | "bitwarden_json" | "apple_passwords" | 
+/**  Chrome, Edge, Brave (`name,url,username,password,note`) et Firefox (avec `timePasswordChanged`). */
+"browser_csv" | "generic_csv";
 
 export type ImportOutcome = {
 	report: ImportReport,

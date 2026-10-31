@@ -1,0 +1,3 @@
+"url","username","password","httpRealm","formActionOrigin","guid","timeCreated","timeLastUsed","timePasswordChanged"
+"https://github.com","alice","pw-fake-ff-1","","https://github.com","{aaaa}","1600000000000","1700000000000","1673308800000"
+"https://exemple.org","alice","pw-fake-ff-2","","https://exemple.org","{bbbb}","1600000000000","1700000000000","0"

@@ -18,6 +18,7 @@ const FORMAT_LABELS: Record<ImportFormat, string> = {
   bitwarden_csv: "Bitwarden (CSV)",
   bitwarden_json: "Bitwarden (JSON)",
   apple_passwords: "Mots de passe d'Apple (CSV)",
+  browser_csv: "Navigateur : Chrome, Edge, Brave, Firefox (CSV)",
   generic_csv: "Autre CSV (mappage manuel)",
 };
 const STRENGTH = ["très faible", "faible", "moyen", "bon", "excellent"];
@@ -115,7 +116,7 @@ function PickStep({ onPick }: { onPick: () => void }) {
     <div className="space-y-4">
       <p className="text-sm text-zinc-400">
         {t(
-          "Exporte tes mots de passe depuis Bitwarden (CSV ou JSON non chiffré) ou l'app Mots de passe d'Apple, puis choisis le fichier. Il est lu par le cœur de Vigie : les mots de passe ne passent jamais par l'interface et ne sont jamais enregistrés. Seuls leur force et leur réutilisation sont conservées.",
+          "Exporte tes mots de passe depuis ton navigateur (Chrome, Edge, Brave, Firefox), Bitwarden (CSV ou JSON non chiffré) ou l'app Mots de passe d'Apple, puis choisis le fichier. Il est lu par le cœur de Vigie : les mots de passe ne passent jamais par l'interface et ne sont jamais enregistrés. Seuls leur force et leur réutilisation sont conservées.",
         )}
       </p>
       <Button onClick={onPick}>{t("Choisir un fichier…")}</Button>

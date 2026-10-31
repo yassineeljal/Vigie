@@ -37,7 +37,10 @@ export const en: Record<string, string> = {
   "Aucune dépendance à afficher. Renseigne les identités de connexion/récupération de tes comptes et lie chaque courriel à son compte (onglet Identités).":
     "No dependencies to show. Fill in the sign-in/recovery identities of your accounts and link each email to its account (Identities tab).",
   "Aucune identité.": "No identities.",
+  "Autre CSV (mappage manuel)": "Other CSV (manual mapping)",
   "Bienvenue dans Vigie": "Welcome to Vigie",
+  "Bitwarden (CSV)": "Bitwarden (CSV)",
+  "Bitwarden (JSON)": "Bitwarden (JSON)",
   Bon: "Good",
   "Brèche postérieure au dernier changement": "Breach after the last password change",
   "Brèche postérieure au dernier changement du mot de passe":
@@ -104,8 +107,8 @@ export const en: Record<string, string> = {
   Effort: "Effort",
   Enregistrer: "Save",
   Excellent: "Excellent",
-  "Exporte tes mots de passe depuis Bitwarden (CSV ou JSON non chiffré) ou l'app Mots de passe d'Apple, puis choisis le fichier. Il est lu par le cœur de Vigie : les mots de passe ne passent jamais par l'interface et ne sont jamais enregistrés. Seuls leur force et leur réutilisation sont conservées.":
-    "Export your passwords from Bitwarden (unencrypted CSV or JSON) or Apple's Passwords app, then choose the file. It is read by Vigie's core: passwords never go through the interface and are never saved. Only their strength and reuse are kept.",
+  "Exporte tes mots de passe depuis ton navigateur (Chrome, Edge, Brave, Firefox), Bitwarden (CSV ou JSON non chiffré) ou l'app Mots de passe d'Apple, puis choisis le fichier. Il est lu par le cœur de Vigie : les mots de passe ne passent jamais par l'interface et ne sont jamais enregistrés. Seuls leur force et leur réutilisation sont conservées.":
+    "Export your passwords from your browser (Chrome, Edge, Brave, Firefox), Bitwarden (unencrypted CSV or JSON) or Apple's Passwords app, then choose the file. It is read by Vigie's core: passwords never go through the interface and are never saved. Only their strength and reuse are kept.",
   "Exporter en CSV": "Export as CSV",
   "Exporter en JSON": "Export as JSON",
   "Exporter l'inventaire": "Export the inventory",
@@ -182,11 +185,13 @@ export const en: Record<string, string> = {
   "Mot de passe présent dans des fuites": "Password found in leaks",
   "Mot de passe réutilisé": "Reused password",
   "Mot de passe trop faible.": "Password too weak.",
+  "Mots de passe d'Apple (CSV)": "Apple Passwords (CSV)",
   Moyen: "Fair",
   Moyenne: "Medium",
   "Méthode MFA activée pour {account_label}": "MFA method enabled for {account_label}",
   "Méthodes MFA": "MFA methods",
   "Méthodes proposées par le site : {methods}.": "Methods offered by the site: {methods}.",
+  "Navigateur : Chrome, Edge, Brave, Firefox (CSV)": "Browser: Chrome, Edge, Brave, Firefox (CSV)",
   Navigation: "Navigation",
   Nom: "Name",
   "Nom d'utilisateur": "Username",

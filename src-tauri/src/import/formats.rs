@@ -19,6 +19,8 @@ pub enum ImportFormat {
     BitwardenCsv,
     BitwardenJson,
     ApplePasswords,
+    /// Chrome, Edge, Brave (`name,url,username,password,note`) et Firefox (avec `timePasswordChanged`).
+    BrowserCsv,
     GenericCsv,
 }
 
@@ -77,6 +79,12 @@ pub fn detect(bytes: &[u8]) -> Option<ImportFormat> {
         Some(ImportFormat::BitwardenCsv)
     } else if has("title") && has("url") && has("username") && has("password") {
         Some(ImportFormat::ApplePasswords)
+    } else if has("url")
+        && has("username")
+        && has("password")
+        && (has("name") || has("timePasswordChanged"))
+    {
+        Some(ImportFormat::BrowserCsv)
     } else {
         None
     }
@@ -93,13 +101,19 @@ pub fn parse(
     let text = strip_bom(bytes);
     match format {
         ImportFormat::BitwardenJson => parse_bitwarden_json(text),
-        ImportFormat::BitwardenCsv => {
-            parse_csv(text, &bitwarden_csv_mapping(), Some(("type", "login")))
+        ImportFormat::BitwardenCsv => parse_csv(
+            text,
+            &bitwarden_csv_mapping(),
+            Some(("type", "login")),
+            None,
+        ),
+        ImportFormat::ApplePasswords => parse_csv(text, &apple_mapping(), None, None),
+        ImportFormat::BrowserCsv => {
+            parse_csv(text, &browser_mapping(), None, Some("timePasswordChanged"))
         }
-        ImportFormat::ApplePasswords => parse_csv(text, &apple_mapping(), None),
         ImportFormat::GenericCsv => {
             let m = mapping.ok_or(ImportError::Format("mappage de colonnes requis".into()))?;
-            parse_csv(text, m, None)
+            parse_csv(text, m, None, None)
         }
     }
 }
@@ -155,6 +169,35 @@ fn bitwarden_csv_mapping() -> ColumnMapping {
     }
 }
 
+fn browser_mapping() -> ColumnMapping {
+    ColumnMapping {
+        name: Some("name".into()),
+        url: Some("url".into()),
+        username: Some("username".into()),
+        password: Some("password".into()),
+        totp: None,
+        notes: Some("note".into()),
+        folder: None,
+    }
+}
+
+/// Convertit des millisecondes depuis 1970 en `AAAA-MM-JJ` (algorithme de Howard Hinnant).
+pub(super) fn epoch_ms_to_date(ms: i64) -> Option<String> {
+    if !(946_684_800_000..=32_503_680_000_000).contains(&ms) {
+        return None; // 0 / inconnu (avant 2000) ou après l'an 3000 : valeur aberrante
+    }
+    let z = ms / 86_400_000 + 719_468;
+    let era = z.div_euclid(146_097);
+    let doe = z.rem_euclid(146_097);
+    let yoe = (doe - doe / 1_460 + doe / 36_524 - doe / 146_096) / 365;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let d = doy - (153 * mp + 2) / 5 + 1;
+    let m = if mp < 10 { mp + 3 } else { mp - 9 };
+    let y = yoe + era * 400 + i64::from(m <= 2);
+    Some(format!("{y:04}-{m:02}-{d:02}"))
+}
+
 fn apple_mapping() -> ColumnMapping {
     ColumnMapping {
         name: Some("Title".into()),
@@ -171,6 +214,7 @@ fn parse_csv(
     text: &[u8],
     m: &ColumnMapping,
     only_rows: Option<(&str, &str)>,
+    date_col: Option<&str>,
 ) -> Result<ParseOutcome, ImportError> {
     let (delim, headers) = read_headers(text)?;
     let idx = |name: &Option<String>| -> Option<usize> {
@@ -189,6 +233,7 @@ fn parse_csv(
     if i_name.is_none() && i_url.is_none() {
         return Err(ImportError::Format("colonne nom ou URL introuvable".into()));
     }
+    let i_date = date_col.and_then(|c| headers.iter().position(|h| h.eq_ignore_ascii_case(c)));
     let i_filter =
         only_rows.and_then(|(col, _)| headers.iter().position(|h| h.eq_ignore_ascii_case(col)));
 
@@ -222,7 +267,10 @@ fn parse_csv(
             has_totp: !get(i_totp).trim().is_empty(),
             notes: opt(get(i_notes), MAX_NOTES),
             folder: opt(get(i_folder), MAX_NAME).filter(|f| !f.eq_ignore_ascii_case("no folder")),
-            pwd_changed_at: None,
+            pwd_changed_at: i_date
+                .and_then(|i| rec.get(i))
+                .and_then(|v| v.trim().parse::<i64>().ok())
+                .and_then(epoch_ms_to_date),
         };
         if entry.name.is_empty() && entry.url.is_empty() {
             out.skipped += 1;

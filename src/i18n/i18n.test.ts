@@ -26,6 +26,10 @@ function usedKeys(): Set<string> {
     const text = readFileSync(file, "utf8");
     for (const m of text.matchAll(/\bt\(\s*"((?:[^"\\]|\\.)*)"/g)) keys.add(lit(m[1]));
     for (const m of text.matchAll(/\blabel:\s*"((?:[^"\\]|\\.)*)"/g)) keys.add(lit(m[1]));
+    for (const m of text.matchAll(
+      /\b(?:bitwarden_csv|bitwarden_json|apple_passwords|browser_csv|generic_csv):\s*"((?:[^"\\]|\\.)*)"/g,
+    ))
+      keys.add(lit(m[1]));
     for (const m of text.matchAll(/\b(?:title|body):\s*"((?:[^"\\]|\\.)*)"/g)) keys.add(lit(m[1]));
     for (const m of text.matchAll(/\["\w+",\s*"((?:[^"\\]|\\.)*)"\]/g)) keys.add(lit(m[1]));
     for (const m of text.matchAll(/^(?:const|export const) (?:STRENGTH|LABELS) = \[([^\]]*)\]/gm)) {
