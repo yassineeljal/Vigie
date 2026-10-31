@@ -96,7 +96,7 @@ function MatchesList() {
     mutationFn: (m: { breach_name: string; account_id: number; kind: string }) =>
       unwrap(commands.acknowledgeBreachMatch(m.breach_name, m.account_id, m.kind)),
     onSuccess: () => {
-      for (const k of ["breach-matches", "score", "actions"])
+      for (const k of ["breach-matches", "score", "actions", "dashboard"])
         void qc.invalidateQueries({ queryKey: [k] });
     },
   });
