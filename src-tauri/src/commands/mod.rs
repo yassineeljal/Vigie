@@ -1,5 +1,8 @@
 //! Couche IPC : commandes exposées au front, types TypeScript générés par tauri-specta.
 
+pub mod state;
+pub mod vault;
+
 use serde::Serialize;
 use specta::Type;
 

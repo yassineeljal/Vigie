@@ -25,6 +25,17 @@ specta-typescript = "=0.0.13"
 tauri-specta = { version = "=2.0.0-rc.26", features = ["derive", "typescript"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+argon2 = "0.6.0"
+chacha20poly1305 = "0.11.0"
+secrecy = "0.10.3"
+zeroize = "1.9.1"
+rand = "0.10.3"
+thiserror = "2.0.21"
+zxcvbn = "3.1.1"
+data-encoding = "2.11.1"
+rusqlite = { version = "0.40", features = ["bundled-sqlcipher-vendored-openssl"] }
+rusqlite_migration = "2.6.0"
+tracing = "0.1.44"
 
 
 # Read the optimization guideline for more details: https://tauri.app/concept/size/#cargo-configuration
@@ -34,3 +45,6 @@ lto = true
 opt-level = 3
 panic = "abort"
 strip = true
+
+[dev-dependencies]
+tempfile = "3.27.0"
