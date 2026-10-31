@@ -56,7 +56,12 @@ impl From<CryptoError> for VaultError {
 }
 
 fn migrations() -> Migrations<'static> {
-    Migrations::new(vec![M::up(include_str!("../../migrations/001_init.sql"))])
+    Migrations::new(vec![
+        M::up(include_str!("../../migrations/001_init.sql")),
+        M::up(include_str!(
+            "../../migrations/002_password_check_nullable.sql"
+        )),
+    ])
 }
 
 /// Coffre déverrouillé. Le verrouiller (= drop) ferme la connexion SQLCipher,

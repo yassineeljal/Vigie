@@ -1,0 +1,4 @@
+Title,URL,Username,Password,Notes,OTPAuth
+Gmail (accounts.google.com),https://accounts.google.com,alice@example.test,Tr0ub4dor&3-fake,,otpauth://totp/Gmail?secret=FAKE
+Instagram,https://www.instagram.com,alice_ig,motdepasse-partage-1,,
+Facebook,https://www.facebook.com,alice.fb,motdepasse-partage-1,"un, avec virgule",

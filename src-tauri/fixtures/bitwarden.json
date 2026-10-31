@@ -1,0 +1,29 @@
+{
+  "encrypted": false,
+  "folders": [{ "id": "f1", "name": "Perso" }],
+  "items": [
+    {
+      "id": "1", "folderId": "f1", "type": 1, "name": "Gmail", "notes": null,
+      "revisionDate": "2024-06-01T10:00:00.000Z",
+      "login": {
+        "uris": [{ "match": null, "uri": "https://mail.google.com/" }],
+        "username": "alice@example.test", "password": "Tr0ub4dor&3-fake",
+        "totp": "JBSWY3DPEHPK3PXP", "passwordRevisionDate": "2023-01-10T08:00:00.000Z"
+      }
+    },
+    {
+      "id": "2", "folderId": null, "type": 1, "name": "Instagram",
+      "revisionDate": "2024-07-01T10:00:00.000Z",
+      "login": {
+        "uris": [{ "uri": "https://instagram.com" }], "username": "alice_ig",
+        "password": "motdepasse-partage-1", "totp": null
+      },
+      "passwordHistory": [
+        { "lastUsedDate": "2021-03-04T00:00:00.000Z", "password": "ancien-1" },
+        { "lastUsedDate": "2022-05-06T00:00:00.000Z", "password": "ancien-2" }
+      ]
+    },
+    { "id": "3", "type": 2, "name": "Note", "notes": "secret" },
+    { "id": "4", "type": 3, "name": "Carte" }
+  ]
+}

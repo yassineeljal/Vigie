@@ -1,0 +1,11 @@
+folder,favorite,type,name,notes,fields,reprompt,login_uri,login_username,login_password,login_totp
+Perso,1,login,Gmail,"Compte principal",,0,https://accounts.google.com/signin,alice@example.test,Tr0ub4dor&3-fake,otpauth://totp/Gmail?secret=FAKEFAKEFAKE
+Perso,0,login,Instagram,,,0,https://www.instagram.com/,alice_ig,motdepasse-partage-1,
+Perso,0,login,Facebook,,,0,https://facebook.com,alice.fb,motdepasse-partage-1,
+,0,login,Forum,,,0,https://forum.exemple.co.uk/login,alice,motdepasse-partage-1,
+Travail,0,login,GitHub,"ligne 1
+ligne 2",,0,"https://github.com/login
+https://github.com/session",alice-dev,gh-fake-password-9,JBSWY3DPEHPK3PXP
+,0,note,Note sécurisée,contenu,,0,,,,
+,0,login,Application mobile,,,0,androidapp://com.exemple.app,alice,x,
+,0,login,,,,0,,,,

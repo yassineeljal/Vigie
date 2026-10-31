@@ -62,6 +62,19 @@ impl From<crate::domain::DomainError> for CommandError {
     }
 }
 
+impl From<crate::import::ImportError> for CommandError {
+    fn from(e: crate::import::ImportError) -> Self {
+        use crate::import::ImportError as I;
+        match e {
+            I::Domain(d) => d.into(),
+            other => Self {
+                kind: ErrorKind::InvalidInput,
+                message: other.to_string(),
+            },
+        }
+    }
+}
+
 impl CommandError {
     pub fn locked() -> Self {
         Self {
