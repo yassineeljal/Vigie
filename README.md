@@ -1,5 +1,11 @@
 # Vigie
 
+[![CI](https://github.com/yassineeljal/Vigie/actions/workflows/ci.yml/badge.svg)](https://github.com/yassineeljal/Vigie/actions/workflows/ci.yml)
+[![Licence MIT](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
+![macOS](https://img.shields.io/badge/macOS-Apple%20Silicon%20%2B%20Intel-lightgrey)
+![Tauri 2](https://img.shields.io/badge/Tauri-2-24c8db)
+![Rust](https://img.shields.io/badge/c%C5%93ur-Rust-b7410e)
+
 Inventaire de sécurité de tes comptes en ligne, **local et chiffré** (macOS). Vigie recense tes comptes, détecte les risques (MFA absente, mot de passe réutilisé ou fuité, brèches), calcule un score **explicable** et te dit **quoi corriger en premier**.
 
 > Statut : version de développement, avant la v1.0. Voir [CHANGELOG.md](CHANGELOG.md) et le plan complet dans [docs/PLAN.md](docs/PLAN.md).
