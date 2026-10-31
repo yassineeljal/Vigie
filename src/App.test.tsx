@@ -50,6 +50,7 @@ describe("parcours du coffre", () => {
         if (cmd === "vault_status")
           return { exists: created, unlocked: created, auto_lock_minutes: 5 };
         if (cmd === "password_strength") return 3;
+        if (cmd === "list_accounts" || cmd === "list_tags") return [];
         if (cmd === "create_vault") {
           created = true;
           return "AAAAA-BBBBB-CCCCC";
@@ -72,6 +73,8 @@ describe("parcours du coffre", () => {
     expect(next).toBeDisabled();
     await user.click(screen.getByRole("checkbox"));
     await user.click(next);
-    await waitFor(() => expect(screen.getByText("Réglages")).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Réglages" })).toBeInTheDocument(),
+    );
   });
 });

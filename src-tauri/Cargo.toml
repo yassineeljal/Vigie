@@ -36,6 +36,7 @@ data-encoding = "2.11.1"
 rusqlite = { version = "0.40", features = ["bundled-sqlcipher-vendored-openssl"] }
 rusqlite_migration = "2.6.0"
 tracing = "0.1.44"
+psl = "2.1.245"
 
 
 # Read the optimization guideline for more details: https://tauri.app/concept/size/#cargo-configuration

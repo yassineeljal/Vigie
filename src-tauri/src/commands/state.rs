@@ -59,6 +59,14 @@ impl AppState {
         self.lock_inner().vault.take().is_some()
     }
 
+    /// Exécute `f` avec la connexion du coffre ; `None` si le coffre est verrouillé.
+    /// Compte comme une activité de l'utilisateur.
+    pub fn with_conn<T>(&self, f: impl FnOnce(&rusqlite::Connection) -> T) -> Option<T> {
+        let mut g = self.lock_inner();
+        g.last_activity = Instant::now();
+        g.vault.as_ref().map(|v| f(v.conn()))
+    }
+
     pub fn touch(&self) {
         self.lock_inner().last_activity = Instant::now();
     }
