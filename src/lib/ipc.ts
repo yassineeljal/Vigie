@@ -37,10 +37,35 @@ export const commands = {
 	importStart: (format: ImportFormat, mapping: ColumnMapping_Deserialize | null) => typedError<ImportPreview_Serialize, CommandError>(__TAURI_INVOKE("import_start", { format, mapping })),
 	importCommit: (policy: DuplicatePolicy, excluded: number[]) => typedError<ImportOutcome, CommandError>(__TAURI_INVOKE("import_commit", { policy, excluded })),
 	importCancel: () => __TAURI_INVOKE<void>("import_cancel"),
+	intelStatus: () => typedError<IntelStatus_Serialize, CommandError>(__TAURI_INVOKE("intel_status")),
+	setOfflineMode: (enabled: boolean) => typedError<null, CommandError>(__TAURI_INVOKE("set_offline_mode", { enabled })),
+	/**
+	 *  Vérifie un mot de passe : seuls les 5 premiers caractères de son SHA-1 sont envoyés.
+	 *  Si `account_id` est fourni, le résultat (jamais le mot de passe) est enregistré.
+	 */
+	checkPassword: (password: string, accountId: number | null) => typedError<PasswordCheckResult, CommandError>(__TAURI_INVOKE("check_password", { password, accountId })),
+	syncBreaches: () => typedError<SyncReport, CommandError>(__TAURI_INVOKE("sync_breaches")),
+	listBreachMatches: () => typedError<BreachMatchView_Serialize[], CommandError>(__TAURI_INVOKE("list_breach_matches")),
+	acknowledgeBreachMatch: (breachName: string, accountId: number, kind: string) => typedError<null, CommandError>(__TAURI_INVOKE("acknowledge_breach_match", { breachName, accountId, kind })),
+	setHibpApiKey: (apiKey: string) => typedError<null, CommandError>(__TAURI_INVOKE("set_hibp_api_key", { apiKey })),
+	clearHibpApiKey: () => typedError<null, CommandError>(__TAURI_INVOKE("clear_hibp_api_key")),
+	/**
+	 *  Envoie chaque courriel de l'inventaire à HIBP (en clair, avec TA clé API). À lancer
+	 *  seulement après confirmation explicite de l'utilisateur.
+	 */
+	checkIdentityEmails: () => typedError<EmailCheckReport, CommandError>(__TAURI_INVOKE("check_identity_emails")),
+	/**
+	 *  Vérifie les mots de passe de la session d'import auprès de Pwned Passwords (k-anonymat).
+	 *  Rien n'est stocké : le décompte reste en mémoire jusqu'à la validation de l'import.
+	 */
+	importCheckLeaks: () => typedError<LeakCheckSummary, CommandError>(__TAURI_INVOKE("import_check_leaks")),
+	/**  Aperçu à jour de la session d'import (après la vérification des fuites). */
+	importPreview: () => typedError<ImportPreview_Serialize, CommandError>(__TAURI_INVOKE("import_preview")),
 };
 
 /** Events */
 export const events = {
+	intelUpdated: makeEvent<IntelUpdated, IntelUpdated>("intel-updated"),
 	vaultLocked: makeEvent<VaultLocked, VaultLocked>("vault-locked"),
 };
 
@@ -137,6 +162,36 @@ export type Account_Serialize = {
 	updated_at: string,
 };
 
+export type BreachMatchView = BreachMatchView_Serialize | BreachMatchView_Deserialize;
+
+export type BreachMatchView_Deserialize = {
+	breach_name: string,
+	title: string,
+	breach_date?: string | null,
+	data_classes: string[],
+	account_id: number,
+	account_label: string,
+	domain: string,
+	/**  `domain` ou `email`. */
+	kind: string,
+	relevant: boolean,
+	acknowledged_at?: string | null,
+};
+
+export type BreachMatchView_Serialize = {
+	breach_name: string,
+	title: string,
+	breach_date: string | null,
+	data_classes: string[],
+	account_id: number,
+	account_label: string,
+	domain: string,
+	/**  `domain` ou `email`. */
+	kind: string,
+	relevant: boolean,
+	acknowledged_at: string | null,
+};
+
 /**  Mappage de colonnes pour un CSV quelconque (noms d'en-têtes). */
 export type ColumnMapping = ColumnMapping_Serialize | ColumnMapping_Deserialize;
 
@@ -177,7 +232,13 @@ export type DuplicatePolicy =
 /**  Créer un nouveau compte quand même. */
 "keep_both";
 
-export type ErrorKind = "already_exists" | "not_found" | "bad_credentials" | "weak_password" | "invalid_recovery_key" | "invalid_input" | "locked" | "internal";
+export type EmailCheckReport = {
+	checked: number,
+	breached: number,
+	matches: number,
+};
+
+export type ErrorKind = "already_exists" | "not_found" | "bad_credentials" | "weak_password" | "invalid_recovery_key" | "invalid_input" | "network" | "offline_mode" | "locked" | "internal";
 
 export type FileInspection = FileInspection_Serialize | FileInspection_Deserialize;
 
@@ -261,11 +322,48 @@ export type ImportReport = {
 	reused_accounts: number,
 };
 
+export type IntelStatus = IntelStatus_Serialize | IntelStatus_Deserialize;
+
+export type IntelStatus_Deserialize = {
+	offline_mode: boolean,
+	breaches_synced_at?: string | null,
+	breach_count: number,
+	has_api_key: boolean,
+};
+
+export type IntelStatus_Serialize = {
+	offline_mode: boolean,
+	breaches_synced_at: string | null,
+	breach_count: number,
+	has_api_key: boolean,
+};
+
+export type IntelUpdated = {
+	newly_relevant: number,
+};
+
+export type LeakCheckSummary = {
+	checked: number,
+	leaked: number,
+};
+
+export type MatchStats = {
+	total: number,
+	relevant: number,
+	/**  Correspondances pertinentes absentes avant ce calcul (pour les notifications). */
+	newly_relevant: number,
+};
+
 export type MfaKind = "passkey" | "hardware_key" | "totp" | "push" | "sms" | "email";
 
 export type MfaMethod = {
 	kind: MfaKind,
 	backup_codes: boolean,
+};
+
+export type PasswordCheckResult = {
+	breach_count: number,
+	strength: number,
 };
 
 export type PickedFile = {
@@ -288,6 +386,7 @@ export type PreviewItem_Deserialize = {
 	has_totp: boolean,
 	has_password: boolean,
 	strength?: number | null,
+	breach_count?: number | null,
 	/**  Compte existant (même domaine et même identifiant). */
 	duplicate_of?: number | null,
 	/**  Entrée précédente du même fichier (même domaine et même identifiant). */
@@ -305,6 +404,7 @@ export type PreviewItem_Serialize = {
 	has_totp: boolean,
 	has_password: boolean,
 	strength: number | null,
+	breach_count: number | null,
 	/**  Compte existant (même domaine et même identifiant). */
 	duplicate_of: number | null,
 	/**  Entrée précédente du même fichier (même domaine et même identifiant). */
@@ -315,6 +415,11 @@ export type PreviewItem_Serialize = {
 };
 
 export type SortKey = "label" | "domain" | "criticality" | "updated_at";
+
+export type SyncReport = {
+	breaches: number,
+	stats: MatchStats,
+};
 
 export type VaultLocked = null;
 

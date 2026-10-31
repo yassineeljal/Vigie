@@ -43,8 +43,19 @@ fn ipc_builder() -> Builder<tauri::Wry> {
             commands::import::import_start,
             commands::import::import_commit,
             commands::import::import_cancel,
+            commands::intel::intel_status,
+            commands::intel::set_offline_mode,
+            commands::intel::check_password,
+            commands::intel::sync_breaches,
+            commands::intel::list_breach_matches,
+            commands::intel::acknowledge_breach_match,
+            commands::intel::set_hibp_api_key,
+            commands::intel::clear_hibp_api_key,
+            commands::intel::check_identity_emails,
+            commands::intel::import_check_leaks,
+            commands::intel::import_preview,
         ])
-        .events(collect_events![VaultLocked])
+        .events(collect_events![VaultLocked, commands::intel::IntelUpdated])
 }
 
 /// Verrouille le coffre après inactivité (US-02) et prévient l'interface.
@@ -77,6 +88,7 @@ pub fn run() {
             let dir = app.path().app_data_dir()?;
             app.manage(AppState::new(dir, crypto::KdfParams::default()));
             spawn_idle_watcher(app.handle().clone());
+            commands::intel::spawn_scheduler(app.handle().clone());
             Ok(())
         })
         .run(tauri::generate_context!())
