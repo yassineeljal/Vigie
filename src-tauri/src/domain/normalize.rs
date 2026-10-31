@@ -5,7 +5,11 @@ use super::DomainError;
 pub fn normalize_domain(input: &str) -> Result<String, DomainError> {
     let invalid = || DomainError::InvalidDomain(input.trim().chars().take(80).collect());
     let mut s = input.trim().to_lowercase();
-    if let Some((_, rest)) = s.split_once("://") {
+    if let Some((scheme, rest)) = s.split_once("://") {
+        // androidapp://, otpauth://… ne désignent pas un site web.
+        if !matches!(scheme, "http" | "https") {
+            return Err(invalid());
+        }
         s = rest.to_owned();
     }
     let end = s.find(['/', '?', '#']).unwrap_or(s.len());

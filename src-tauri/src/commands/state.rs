@@ -5,6 +5,7 @@ use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
 use crate::crypto::KdfParams;
+use crate::import::ImportSession;
 use crate::vault::Vault;
 
 pub const DEFAULT_AUTO_LOCK_MIN: u32 = 5;
@@ -18,6 +19,9 @@ pub struct AppState {
 
 struct Inner {
     vault: Option<Vault>,
+    /// Import en cours : mots de passe en mémoire, effacés au verrouillage.
+    import: Option<ImportSession>,
+    picked_path: Option<PathBuf>,
     last_activity: Instant,
     auto_lock: Duration,
 }
@@ -29,6 +33,8 @@ impl AppState {
             kdf,
             inner: Mutex::new(Inner {
                 vault: None,
+                import: None,
+                picked_path: None,
                 last_activity: Instant::now(),
                 auto_lock: minutes(DEFAULT_AUTO_LOCK_MIN),
             }),
@@ -56,7 +62,10 @@ impl AppState {
 
     /// Verrouille ; retourne `true` si un coffre était ouvert.
     pub fn lock(&self) -> bool {
-        self.lock_inner().vault.take().is_some()
+        let mut g = self.lock_inner();
+        g.import = None;
+        g.picked_path = None;
+        g.vault.take().is_some()
     }
 
     /// Exécute `f` avec la connexion du coffre ; `None` si le coffre est verrouillé.
@@ -65,6 +74,49 @@ impl AppState {
         let mut g = self.lock_inner();
         g.last_activity = Instant::now();
         g.vault.as_ref().map(|v| f(v.conn()))
+    }
+
+    pub fn set_picked_path(&self, p: Option<PathBuf>) {
+        let mut g = self.lock_inner();
+        g.picked_path = p;
+        g.import = None;
+    }
+
+    pub fn picked_path(&self) -> Option<PathBuf> {
+        self.lock_inner().picked_path.clone()
+    }
+
+    /// Installe la session d'import et retourne son aperçu.
+    pub fn start_import<T>(
+        &self,
+        session: ImportSession,
+        preview: impl FnOnce(&rusqlite::Connection, &ImportSession) -> T,
+    ) -> Option<T> {
+        let mut g = self.lock_inner();
+        g.last_activity = Instant::now();
+        let out = preview(g.vault.as_ref()?.conn(), &session);
+        g.import = Some(session);
+        Some(out)
+    }
+
+    /// Exécute `f` avec la connexion et la session d'import ; `None` si verrouillé ou sans session.
+    /// La session est consommée (effacée) que `f` réussisse ou non.
+    pub fn finish_import<T>(
+        &self,
+        f: impl FnOnce(&rusqlite::Connection, &ImportSession) -> T,
+    ) -> Option<T> {
+        let mut g = self.lock_inner();
+        g.last_activity = Instant::now();
+        let session = g.import.take()?;
+        let out = f(g.vault.as_ref()?.conn(), &session);
+        g.picked_path = None;
+        Some(out)
+    }
+
+    pub fn cancel_import(&self) {
+        let mut g = self.lock_inner();
+        g.import = None;
+        g.picked_path = None;
     }
 
     pub fn touch(&self) {
@@ -76,6 +128,8 @@ impl AppState {
         let mut g = self.lock_inner();
         if g.vault.is_some() && !g.auto_lock.is_zero() && g.last_activity.elapsed() >= g.auto_lock {
             g.vault = None;
+            g.import = None;
+            g.picked_path = None;
             return true;
         }
         false

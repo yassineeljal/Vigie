@@ -32,6 +32,11 @@ export const commands = {
 	deleteIdentity: (id: number) => typedError<null, CommandError>(__TAURI_INVOKE("delete_identity", { id })),
 	/**  Aperçu du domaine normalisé pendant la saisie (US-16). */
 	previewDomain: (input: string) => __TAURI_INVOKE<string | null>("preview_domain", { input }),
+	importPickFile: () => typedError<PickedFile | null, CommandError>(__TAURI_INVOKE("import_pick_file")),
+	importInspect: () => typedError<FileInspection_Serialize, CommandError>(__TAURI_INVOKE("import_inspect")),
+	importStart: (format: ImportFormat, mapping: ColumnMapping_Deserialize | null) => typedError<ImportPreview_Serialize, CommandError>(__TAURI_INVOKE("import_start", { format, mapping })),
+	importCommit: (policy: DuplicatePolicy, excluded: number[]) => typedError<ImportOutcome, CommandError>(__TAURI_INVOKE("import_commit", { policy, excluded })),
+	importCancel: () => __TAURI_INVOKE<void>("import_cancel"),
 };
 
 /** Events */
@@ -132,6 +137,31 @@ export type Account_Serialize = {
 	updated_at: string,
 };
 
+/**  Mappage de colonnes pour un CSV quelconque (noms d'en-têtes). */
+export type ColumnMapping = ColumnMapping_Serialize | ColumnMapping_Deserialize;
+
+/**  Mappage de colonnes pour un CSV quelconque (noms d'en-têtes). */
+export type ColumnMapping_Deserialize = {
+	name?: string | null,
+	url?: string | null,
+	username?: string | null,
+	password?: string | null,
+	totp?: string | null,
+	notes?: string | null,
+	folder?: string | null,
+};
+
+/**  Mappage de colonnes pour un CSV quelconque (noms d'en-têtes). */
+export type ColumnMapping_Serialize = {
+	name: string | null,
+	url: string | null,
+	username: string | null,
+	password: string | null,
+	totp: string | null,
+	notes: string | null,
+	folder: string | null,
+};
+
 export type CommandError = {
 	kind: ErrorKind,
 	message: string,
@@ -139,7 +169,29 @@ export type CommandError = {
 
 export type Criticality = "critical" | "high" | "medium" | "low";
 
+export type DuplicatePolicy = 
+/**  Ignorer les doublons. */
+"skip" | 
+/**  Compléter le compte existant (TOTP, date de changement, étiquettes, notes). */
+"merge" | 
+/**  Créer un nouveau compte quand même. */
+"keep_both";
+
 export type ErrorKind = "already_exists" | "not_found" | "bad_credentials" | "weak_password" | "invalid_recovery_key" | "invalid_input" | "locked" | "internal";
+
+export type FileInspection = FileInspection_Serialize | FileInspection_Deserialize;
+
+export type FileInspection_Deserialize = {
+	/**  Format reconnu automatiquement ; `None` → mappage de colonnes à fournir. */
+	format?: ImportFormat | null,
+	headers: string[],
+};
+
+export type FileInspection_Serialize = {
+	/**  Format reconnu automatiquement ; `None` → mappage de colonnes à fournir. */
+	format: ImportFormat | null,
+	headers: string[],
+};
 
 export type Identity = Identity_Serialize | Identity_Deserialize;
 
@@ -175,6 +227,40 @@ export type Identity_Serialize = {
 	account_id: number | null,
 };
 
+export type ImportFormat = "bitwarden_csv" | "bitwarden_json" | "apple_passwords" | "generic_csv";
+
+export type ImportOutcome = {
+	report: ImportReport,
+	/**  Fichier source, à supprimer par l'utilisateur (M11). */
+	file_path: string,
+};
+
+export type ImportPreview = ImportPreview_Serialize | ImportPreview_Deserialize;
+
+export type ImportPreview_Deserialize = {
+	items: PreviewItem_Deserialize[],
+	reuse_groups: number,
+	reused_accounts: number,
+	skipped_rows: number,
+};
+
+export type ImportPreview_Serialize = {
+	items: PreviewItem_Serialize[],
+	reuse_groups: number,
+	reused_accounts: number,
+	skipped_rows: number,
+};
+
+export type ImportReport = {
+	created: number,
+	merged: number,
+	skipped_duplicates: number,
+	skipped_invalid: number,
+	excluded: number,
+	reuse_groups: number,
+	reused_accounts: number,
+};
+
 export type MfaKind = "passkey" | "hardware_key" | "totp" | "push" | "sms" | "email";
 
 export type MfaMethod = {
@@ -182,9 +268,50 @@ export type MfaMethod = {
 	backup_codes: boolean,
 };
 
+export type PickedFile = {
+	name: string,
+	size_bytes: number,
+};
+
 export type Pong = {
 	message: string,
 	version: string,
+};
+
+export type PreviewItem = PreviewItem_Serialize | PreviewItem_Deserialize;
+
+export type PreviewItem_Deserialize = {
+	index: number,
+	label: string,
+	domain?: string | null,
+	username?: string | null,
+	has_totp: boolean,
+	has_password: boolean,
+	strength?: number | null,
+	/**  Compte existant (même domaine et même identifiant). */
+	duplicate_of?: number | null,
+	/**  Entrée précédente du même fichier (même domaine et même identifiant). */
+	repeats_index?: number | null,
+	/**  Identifiant de groupe de réutilisation (local à cet aperçu). */
+	reuse_group?: number | null,
+	issue?: string | null,
+};
+
+export type PreviewItem_Serialize = {
+	index: number,
+	label: string,
+	domain: string | null,
+	username: string | null,
+	has_totp: boolean,
+	has_password: boolean,
+	strength: number | null,
+	/**  Compte existant (même domaine et même identifiant). */
+	duplicate_of: number | null,
+	/**  Entrée précédente du même fichier (même domaine et même identifiant). */
+	repeats_index: number | null,
+	/**  Identifiant de groupe de réutilisation (local à cet aperçu). */
+	reuse_group: number | null,
+	issue: string | null,
 };
 
 export type SortKey = "label" | "domain" | "criticality" | "updated_at";

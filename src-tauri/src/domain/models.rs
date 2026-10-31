@@ -99,3 +99,21 @@ pub struct AccountFilter {
     pub sort: SortKey,
     pub descending: bool,
 }
+
+impl From<&Account> for AccountInput {
+    fn from(a: &Account) -> Self {
+        Self {
+            domain: a.domain.clone(),
+            label: a.label.clone(),
+            identity_id: a.identity_id,
+            username: a.username.clone(),
+            criticality: a.criticality,
+            recovery_identity_id: a.recovery_identity_id,
+            pwd_changed_at: a.pwd_changed_at.clone(),
+            status: a.status,
+            notes: a.notes.clone(),
+            tags: a.tags.clone(),
+            mfa: a.mfa.clone(),
+        }
+    }
+}

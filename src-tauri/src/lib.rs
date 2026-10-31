@@ -38,6 +38,11 @@ fn ipc_builder() -> Builder<tauri::Wry> {
             commands::inventory::save_identity,
             commands::inventory::delete_identity,
             commands::inventory::preview_domain,
+            commands::import::import_pick_file,
+            commands::import::import_inspect,
+            commands::import::import_start,
+            commands::import::import_commit,
+            commands::import::import_cancel,
         ])
         .events(collect_events![VaultLocked])
 }
@@ -65,6 +70,7 @@ pub fn run() {
         .expect("échec de l'export des types IPC");
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .invoke_handler(builder.invoke_handler())
         .setup(move |app| {
             builder.mount_events(app);
