@@ -95,7 +95,10 @@ function MatchesList() {
   const ack = useMutation({
     mutationFn: (m: { breach_name: string; account_id: number; kind: string }) =>
       unwrap(commands.acknowledgeBreachMatch(m.breach_name, m.account_id, m.kind)),
-    onSuccess: () => void qc.invalidateQueries({ queryKey: ["breach-matches"] }),
+    onSuccess: () => {
+      for (const k of ["breach-matches", "score", "actions"])
+        void qc.invalidateQueries({ queryKey: [k] });
+    },
   });
   const relevant = matches.filter((m) => m.relevant && !m.acknowledged_at);
   return (

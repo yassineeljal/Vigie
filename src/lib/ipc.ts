@@ -61,6 +61,19 @@ export const commands = {
 	importCheckLeaks: () => typedError<LeakCheckSummary, CommandError>(__TAURI_INVOKE("import_check_leaks")),
 	/**  Aperçu à jour de la session d'import (après la vérification des fuites). */
 	importPreview: () => typedError<ImportPreview_Serialize, CommandError>(__TAURI_INVOKE("import_preview")),
+	/**  Score global et score détaillé (facteurs et points) de chaque compte actif. */
+	getScoreReport: () => typedError<ScoreReport, CommandError>(__TAURI_INVOKE("get_score_report")),
+	listActions: (view: PlanView, status: ActionStatus) => typedError<ActionView[], CommandError>(__TAURI_INVOKE("list_actions", { view, status })),
+	/**  Marque l'action faite en appliquant son effet ; `mfa_kind` est requis pour les actions MFA. */
+	completeAction: (id: number, mfaKind: MfaKind | null) => typedError<ScoreReport, CommandError>(__TAURI_INVOKE("complete_action", { id, mfaKind })),
+	setActionStatus: (id: number, status: ActionStatus) => typedError<null, CommandError>(__TAURI_INVOKE("set_action_status", { id, status })),
+	syncMfaDirectory: () => typedError<MfaSyncReport, CommandError>(__TAURI_INVOKE("sync_mfa_directory")),
+	/**
+	 *  Ouvre la page de changement de mot de passe dans le navigateur. L'URL est construite côté
+	 *  Rust à partir du domaine stocké : `/.well-known/change-password` (standard W3C) ou, en repli
+	 *  choisi par l'utilisateur, la page d'accueil. Aucun appel réseau de Vigie lui-même.
+	 */
+	openChangePassword: (accountId: number, homepage: boolean) => typedError<null, CommandError>(__TAURI_INVOKE("open_change_password", { accountId, homepage })),
 };
 
 /** Events */
@@ -126,6 +139,17 @@ export type AccountInput_Serialize = {
 	mfa: MfaMethod[],
 };
 
+export type AccountScore = {
+	account_id: number,
+	likelihood: number,
+	weight: number | null,
+	/**  Criticité effective après héritage (peut dépasser celle saisie). */
+	effective_criticality: Criticality,
+	/**  L × w */
+	priority: number | null,
+	factors: FactorHit[],
+};
+
 export type AccountStatus = "active" | "unused" | "deleted";
 
 export type Account_Deserialize = {
@@ -160,6 +184,28 @@ export type Account_Serialize = {
 	mfa: MfaMethod[],
 	created_at: string,
 	updated_at: string,
+};
+
+export type ActionKind = "change_password" | "change_password_after_breach" | "enable_mfa" | "upgrade_mfa" | "secure_pivot" | "delete_unused";
+
+export type ActionStatus = "todo" | "done" | "ignored";
+
+export type ActionView = {
+	id: number,
+	account_id: number,
+	account_label: string,
+	domain: string,
+	kind: ActionKind,
+	gain: number | null,
+	effort_min: number,
+	/**  gain ÷ effort (points par minute) */
+	ratio: number | null,
+	status: ActionStatus,
+	/**  Facteurs corrigés par l'action (vide pour les actions déjà traitées). */
+	factors: Factor[],
+	/**  Méthodes MFA que le site déclare supporter (2fa.directory), si connues. */
+	supported_mfa: string[],
+	supports_passkeys: boolean,
 };
 
 export type BreachMatchView = BreachMatchView_Serialize | BreachMatchView_Deserialize;
@@ -239,6 +285,13 @@ export type EmailCheckReport = {
 };
 
 export type ErrorKind = "already_exists" | "not_found" | "bad_credentials" | "weak_password" | "invalid_recovery_key" | "invalid_input" | "network" | "offline_mode" | "locked" | "internal";
+
+export type Factor = "pwned_password" | "breach_after_change" | "reused_password" | "no_mfa" | "pivot_without_strong_mfa" | "weak_password" | "weak_mfa_only" | "unused_active" | "never_checked";
+
+export type FactorHit = {
+	factor: Factor,
+	points: number,
+};
 
 export type FileInspection = FileInspection_Serialize | FileInspection_Deserialize;
 
@@ -361,6 +414,10 @@ export type MfaMethod = {
 	backup_codes: boolean,
 };
 
+export type MfaSyncReport = {
+	services_updated: number,
+};
+
 export type PasswordCheckResult = {
 	breach_count: number,
 	strength: number,
@@ -370,6 +427,12 @@ export type PickedFile = {
 	name: string,
 	size_bytes: number,
 };
+
+export type PlanView = 
+/**  Tri par gain décroissant. */
+"impact" | 
+/**  Tri par gain ÷ effort décroissant. */
+"quick_wins";
 
 export type Pong = {
 	message: string,
@@ -412,6 +475,12 @@ export type PreviewItem_Serialize = {
 	/**  Identifiant de groupe de réutilisation (local à cet aperçu). */
 	reuse_group: number | null,
 	issue: string | null,
+};
+
+export type ScoreReport = {
+	rules_version: string,
+	global: number | null,
+	accounts: AccountScore[],
 };
 
 export type SortKey = "label" | "domain" | "criticality" | "updated_at";

@@ -437,3 +437,60 @@ fn trousseau_en_memoire() {
     s.delete("k").unwrap();
     assert!(s.get("k").unwrap().is_none());
 }
+
+// ---------- 2fa.directory ----------
+
+#[tokio::test]
+async fn catalogue_mfa_met_a_jour_les_services_de_l_inventaire() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/tfa/all.json"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+            ["GitHub", { "domain": "github.com", "tfa": ["totp", "u2f", "sms"], "passwordless": "allowed",
+                         "additional-domains": ["githubapp.com"] }],
+            ["Inconnu", { "domain": "pasdansinventaire.com", "tfa": ["totp"] }],
+            ["Banque", { "domain": "https://www.banque.ca/", "tfa": ["sms", "email"] }],
+            ["Cassé", 42],
+            { "domain": "forme-objet.org", "tfa": ["totp"], "passkeys": true },
+        ])))
+        .mount(&server)
+        .await;
+    let client = IntelClient::for_mock(&server.uri());
+    let entries = client.fetch_tfa().await.unwrap();
+    assert_eq!(entries.len(), 4);
+    assert!(entries[0].passkeys);
+    assert_eq!(entries[0].domains, ["github.com", "githubapp.com"]);
+    assert!(!entries[2].passkeys);
+    assert!(entries[3].passkeys);
+
+    let (_d, v) = vault();
+    account(&v, "github.com", None, None);
+    account(&v, "banque.ca", None, None);
+    assert_eq!(store_tfa(v.conn(), &entries).unwrap(), 2);
+    let (methods, passkeys): (String, bool) = v
+        .conn()
+        .query_row(
+            "SELECT supported_mfa, passkeys FROM service WHERE domain='github.com'",
+            [],
+            |r| Ok((r.get(0)?, r.get(1)?)),
+        )
+        .unwrap();
+    assert_eq!(methods, r#"["totp","u2f","sms"]"#);
+    assert!(passkeys);
+    // Un service absent de l'inventaire n'est pas créé.
+    let n: u32 = v
+        .conn()
+        .query_row(
+            "SELECT count(*) FROM service WHERE domain='pasdansinventaire.com'",
+            [],
+            |r| r.get(0),
+        )
+        .unwrap();
+    assert_eq!(n, 0);
+}
+
+#[test]
+fn catalogue_mfa_format_inattendu() {
+    assert!(parse_tfa(&serde_json::json!({ "pas": "une liste" })).is_err());
+    assert!(parse_tfa(&serde_json::json!([])).unwrap().is_empty());
+}

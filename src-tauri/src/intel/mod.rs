@@ -7,6 +7,7 @@ mod client;
 mod email;
 mod pwned;
 mod secrets;
+mod tfa;
 
 #[cfg(test)]
 pub use breaches::RawBreach;
@@ -21,6 +22,9 @@ pub use pwned::{count_in_range, pwned_count, pwned_ranges, sha1_split};
 #[cfg(test)]
 pub use secrets::MemoryStore;
 pub use secrets::{KeychainStore, SecretStore};
+#[cfg(test)]
+pub use tfa::parse_tfa;
+pub use tfa::store_tfa;
 
 #[derive(Debug, thiserror::Error)]
 pub enum IntelError {
