@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Button } from "./components/ui";
 import { AccountsScreen } from "./features/accounts/AccountsScreen";
 import { ImportScreen } from "./features/import/ImportScreen";
+import { BreachesScreen } from "./features/breaches/BreachesScreen";
 import { IdentitiesScreen } from "./features/identities/IdentitiesScreen";
 import { CreateVaultScreen } from "./features/unlock/CreateVaultScreen";
 import { UnlockScreen } from "./features/unlock/UnlockScreen";
@@ -12,7 +13,9 @@ import { SettingsScreen } from "./features/settings/SettingsScreen";
 
 export default function App() {
   const qc = useQueryClient();
-  const [tab, setTab] = useState<"accounts" | "identities" | "import" | "settings">("accounts");
+  const [tab, setTab] = useState<"accounts" | "identities" | "import" | "breaches" | "settings">(
+    "accounts",
+  );
   const { data: status, isError } = useVaultStatus();
   useVaultLifecycle(status?.unlocked ?? false);
 
@@ -31,6 +34,7 @@ export default function App() {
               ["accounts", "Comptes"],
               ["identities", "Identités"],
               ["import", "Importer"],
+              ["breaches", "Brèches"],
               ["settings", "Réglages"],
             ] as const
           ).map(([k, l]) => (
@@ -59,6 +63,7 @@ export default function App() {
         {tab === "accounts" && <AccountsScreen />}
         {tab === "identities" && <IdentitiesScreen />}
         {tab === "import" && <ImportScreen />}
+        {tab === "breaches" && <BreachesScreen />}
         {tab === "settings" && <SettingsScreen autoLockMinutes={status.auto_lock_minutes} />}
       </div>
     </main>
