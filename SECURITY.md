@@ -13,10 +13,10 @@ Ouvre un **avis de sécurité privé** (onglet *Security* → *Report a vulnerab
 - Les appels réseau ne partent que du cœur Rust, en HTTPS, vers une liste blanche de 3 hôtes ; aucune télémétrie.
 - La WebView applique une CSP stricte et des capacités Tauri minimales.
 
-Détails : [docs/threat-model.md](docs/threat-model.md), [docs/security-review.md](docs/security-review.md).
+Le détail du modèle de sécurité figure dans le [README](README.md#modèle-de-sécurité).
 
 ## Hors périmètre
 
 Un logiciel malveillant avec privilèges **root ou noyau** peut lire la mémoire, enregistrer le clavier et contourner toute protection : Vigie ne s'en défend pas. De même, tant que le coffre est déverrouillé, ses données sont accessibles à un processus qui s'exécute sous ton compte. Active FileVault et verrouille ta session.
 
-Autres limites connues : la réutilisation de mots de passe n'est détectée que parmi les comptes d'un même import (ADR-005) ; les vérifications Pwned Passwords révèlent un préfixe de hash de 5 caractères ; la vérification par courriel (option) envoie le courriel en clair à HIBP.
+Autres limites connues : la réutilisation de mots de passe n'est détectée que parmi les comptes d'un même import ; les vérifications Pwned Passwords révèlent un préfixe de hash de 5 caractères ; la vérification par courriel (option) envoie le courriel en clair à HIBP.

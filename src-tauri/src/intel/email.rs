@@ -1,4 +1,4 @@
-//! Vérification par courriel (option, ADR-004). Le courriel part en clair vers HIBP : à utiliser
+//! Vérification par courriel (option). Le courriel part en clair vers HIBP : à utiliser
 //! uniquement avec la clé API de l'utilisateur, et seulement sur demande explicite.
 
 use rusqlite::{Connection, params};

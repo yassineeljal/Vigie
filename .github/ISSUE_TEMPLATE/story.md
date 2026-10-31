@@ -1,6 +1,6 @@
 ---
 name: User story
-about: Une story du backlog (docs/PLAN.md §3.1)
+about: Une fonctionnalité décrite comme une user story
 labels: story
 ---
 

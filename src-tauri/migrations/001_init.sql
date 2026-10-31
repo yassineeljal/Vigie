@@ -1,4 +1,4 @@
--- Schéma v1 (docs/PLAN.md §5.4). Aucune colonne ne stocke de mot de passe ni de hash de mot de passe.
+-- Schéma v1. Aucune colonne ne stocke de mot de passe ni de hash de mot de passe.
 CREATE TABLE service (
   domain        TEXT PRIMARY KEY,
   name          TEXT NOT NULL,

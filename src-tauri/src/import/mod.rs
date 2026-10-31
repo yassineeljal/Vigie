@@ -3,7 +3,7 @@
 //! Les fichiers sont lus **côté Rust** : les mots de passe ne traversent jamais la WebView.
 //! Ils vivent dans une `ImportSession` en mémoire (effacée à la fin, à l'annulation et au
 //! verrouillage) ; seuls la force et un identifiant de groupe de réutilisation sont persistés
-//! (ADR-003, ADR-005).
+//! (le coffre ne stocke jamais de mot de passe).
 
 mod commit;
 mod formats;

@@ -1,4 +1,4 @@
-//! Catalogue public des brèches HIBP et corrélation par domaine (ADR-004, US-31/32).
+//! Catalogue public des brèches HIBP et corrélation par domaine (US-31/32).
 
 use std::collections::{HashMap, HashSet};
 

@@ -14,7 +14,7 @@ pub struct KdfParams {
 }
 
 impl Default for KdfParams {
-    /// Calibré le 2026-10-31 (~0,5 s sur le Mac de dev) : 256 MiB, t=6, p=1. Voir ADR-002.
+    /// Calibré le 2026-10-31 (~0,5 s sur le Mac de dev) : 256 MiB, t=6, p=1.
     fn default() -> Self {
         Self {
             m_kib: 256 * 1024,

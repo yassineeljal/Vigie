@@ -9,7 +9,7 @@ const MAX_BODY: usize = 20 * 1024 * 1024;
 const MAX_ATTEMPTS: u32 = 4;
 const MAX_WAIT: Duration = Duration::from_secs(60);
 
-/// Hôtes autorisés (ADR-006). Toute autre destination est refusée avant l'envoi.
+/// Hôtes autorisés. Toute autre destination est refusée avant l'envoi.
 pub const ALLOWED_HOSTS: [&str; 3] = [
     "api.pwnedpasswords.com",
     "haveibeenpwned.com",

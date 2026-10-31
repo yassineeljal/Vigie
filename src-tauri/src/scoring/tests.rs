@@ -51,7 +51,7 @@ fn les_poids_correspondent_au_plan() {
     );
 }
 
-/// Exemples du plan (§6.3) : Instagram 55 × 0,5 = 27,5 ; Gmail 45 × 1,0 = 45.
+/// Exemples de référence : Instagram 55 × 0,5 = 27,5 ; Gmail 45 × 1,0 = 45.
 #[test]
 fn exemple_du_plan() {
     let mut insta = facts(1, Criticality::Medium);

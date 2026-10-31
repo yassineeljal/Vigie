@@ -22,7 +22,7 @@ export const ACTION_LABELS: Record<ActionKind, string> = {
 };
 
 export function scoreColor(score: number): string {
-  if (score >= 80) return "text-emerald-400";
-  if (score >= 50) return "text-amber-400";
-  return "text-red-400";
+  if (score >= 80) return "text-safe";
+  if (score >= 50) return "text-warn";
+  return "text-danger";
 }

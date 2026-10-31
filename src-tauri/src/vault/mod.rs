@@ -1,5 +1,5 @@
 //! Coffre : base SQLCipher dont la clé (DEK) est enveloppée par le mot de passe maître
-//! (Argon2id → KEK) et par la clé de récupération. Voir ADR-002 et PLAN §5.5.
+//! (Argon2id → KEK) et par la clé de récupération.
 
 mod header;
 mod policy;

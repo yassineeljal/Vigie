@@ -57,7 +57,7 @@ pub struct ImportPreview {
 
 /// Regroupe les entrées qui partagent le même mot de passe (groupes d'au moins 2).
 /// Retourne, pour chaque position, `Some(groupe)` numéroté à partir de 1. Calcul purement
-/// en mémoire : aucun hash de mot de passe n'est conservé (ADR-005).
+/// en mémoire : aucun hash de mot de passe n'est conservé.
 pub fn group_passwords<'a>(
     passwords: impl Iterator<Item = Option<&'a SecretString>>,
 ) -> Vec<Option<u32>> {

@@ -1,6 +1,14 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Background, Controls, MarkerType, ReactFlow, type Edge, type Node } from "@xyflow/react";
+import {
+  Background,
+  Controls,
+  MarkerType,
+  Position,
+  ReactFlow,
+  type Edge,
+  type Node,
+} from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { commands, type GraphData, type GraphNode } from "../../lib/ipc";
 import { unwrap } from "../../lib/result";
@@ -38,6 +46,9 @@ export function layout(data: GraphData): { nodes: Node[]; edges: Edge[] } {
     return {
       id: n.id,
       position: { x: n.level * COL, y: row * ROW },
+      // La disposition va de gauche à droite : les flèches aussi.
+      sourcePosition: Position.Right,
+      targetPosition: Position.Left,
       data: { label: `${n.label}${n.dependents ? ` (${n.dependents})` : ""}` },
       ariaLabel: describe(n),
       style: {

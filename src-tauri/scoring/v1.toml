@@ -1,4 +1,4 @@
-# Règles de score v1 (docs/PLAN.md §6). Toute modification de poids = nouvelle version
+# Règles de score v1. Toute modification de poids = nouvelle version
 # (v2.toml) : chaque snapshot enregistre la version pour garder un historique comparable.
 version = "v1"
 

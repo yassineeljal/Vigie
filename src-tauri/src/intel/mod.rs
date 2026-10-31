@@ -1,5 +1,5 @@
 //! Renseignement externe (US-25, US-30 à US-35) : Pwned Passwords, catalogue HIBP, courriel.
-//! Tous les appels réseau passent par `IntelClient` (ADR-006) : HTTPS uniquement, hôtes en
+//! Tous les appels réseau passent par `IntelClient` : HTTPS uniquement, hôtes en
 //! liste blanche, aucune redirection, backoff exponentiel et gestion des 429 (NFR-06).
 
 mod breaches;
