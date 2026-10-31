@@ -1,3 +1,4 @@
+import { t } from "../i18n";
 import type { CommandError } from "./ipc";
 
 type IpcResult<T> = { status: "ok"; data: T } | { status: "error"; error: CommandError };
@@ -19,14 +20,37 @@ export function errorMessage(e: unknown): string {
   if (e instanceof IpcError) {
     switch (e.error.kind) {
       case "bad_credentials":
-        return "Mot de passe ou clé de récupération incorrect.";
+        return t("Mot de passe ou clé de récupération incorrect.");
       case "weak_password":
-        return "Mot de passe trop faible.";
+        return t("Mot de passe trop faible.");
       case "invalid_recovery_key":
-        return "Clé de récupération invalide.";
+        return t("Clé de récupération invalide.");
       default:
-        return e.error.message;
+        return coreMessage(e.error.message);
     }
   }
-  return "Une erreur inattendue est survenue.";
+  return t("Une erreur inattendue est survenue.");
+}
+
+/** Messages d'erreur du cœur Rust (en français) : traduits ici, avec leurs parties variables. */
+const DYNAMIC: [RegExp, string][] = [
+  [/^domaine invalide : (.*)$/s, "domaine invalide : {0}"],
+  [/^données invalides : (.*)$/s, "données invalides : {0}"],
+  [/^format non reconnu : (.*)$/s, "format non reconnu : {0}"],
+  [/^lecture impossible : (.*)$/s, "lecture impossible : {0}"],
+  [/^écriture impossible : (.*)$/s, "écriture impossible : {0}"],
+  [/^ouverture impossible : (.*)$/s, "ouverture impossible : {0}"],
+  [/^réponse inattendue du service \(HTTP (\d+)\)$/, "réponse inattendue du service (HTTP {0})"],
+  [
+    /^mot de passe maître trop faible \(score zxcvbn (\d)\/4, minimum 3\)$/,
+    "mot de passe maître trop faible (score zxcvbn {0}/4, minimum 3)",
+  ],
+];
+
+export function coreMessage(message: string): string {
+  for (const [re, key] of DYNAMIC) {
+    const m = re.exec(message);
+    if (m) return t(key).replace("{0}", m[1]);
+  }
+  return t(message);
 }

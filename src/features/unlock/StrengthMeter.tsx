@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { commands } from "../../lib/ipc";
+import { t } from "../../i18n";
 
 const LABELS = ["Très faible", "Faible", "Moyen", "Bon", "Excellent"];
 
@@ -22,7 +23,9 @@ export function StrengthMeter({ password }: { password: string }) {
         />
       </div>
       <p className="text-xs text-zinc-400">
-        {score >= 3 ? "Suffisant" : `${LABELS[score]} : choisis une phrase de passe plus longue`}
+        {score >= 3
+          ? t("Suffisant")
+          : t("{n1} : choisis une phrase de passe plus longue", { n1: t(LABELS[score]) })}
       </p>
     </div>
   );

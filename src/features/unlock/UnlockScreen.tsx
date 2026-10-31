@@ -5,6 +5,7 @@ import { errorMessage, unwrap } from "../../lib/result";
 import { VAULT_KEY } from "../../lib/useVault";
 import { Button, Card, ErrorText, Field } from "../../components/ui";
 import { StrengthMeter } from "./StrengthMeter";
+import { t } from "../../i18n";
 
 export function UnlockScreen() {
   const qc = useQueryClient();
@@ -43,11 +44,11 @@ export function UnlockScreen() {
   }
 
   return (
-    <Card title="Vigie est verrouillé">
+    <Card title={t("Vigie est verrouillé")}>
       <form onSubmit={submit} className="space-y-4">
         {mode === "password" ? (
           <Field
-            label="Mot de passe maître"
+            label={t("Mot de passe maître")}
             type="password"
             value={pw}
             onChange={(e) => setPw(e.target.value)}
@@ -56,13 +57,13 @@ export function UnlockScreen() {
         ) : (
           <>
             <Field
-              label="Clé de récupération"
+              label={t("Clé de récupération")}
               value={recoveryKey}
               onChange={(e) => setRecoveryKey(e.target.value)}
               autoFocus
             />
             <Field
-              label="Nouveau mot de passe maître"
+              label={t("Nouveau mot de passe maître")}
               type="password"
               value={newPw}
               onChange={(e) => setNewPw(e.target.value)}
@@ -76,7 +77,11 @@ export function UnlockScreen() {
             type="submit"
             disabled={busy || (mode === "password" ? !pw : !recoveryKey || !newPw)}
           >
-            {busy ? "Déverrouillage…" : mode === "password" ? "Déverrouiller" : "Réinitialiser"}
+            {busy
+              ? t("Déverrouillage…")
+              : mode === "password"
+                ? t("Déverrouiller")
+                : t("Réinitialiser")}
           </Button>
           <Button
             variant="ghost"
@@ -87,7 +92,7 @@ export function UnlockScreen() {
               setMode(mode === "password" ? "recovery" : "password");
             }}
           >
-            {mode === "password" ? "Mot de passe oublié ?" : "Retour"}
+            {mode === "password" ? t("Mot de passe oublié ?") : t("Retour")}
           </Button>
         </div>
       </form>

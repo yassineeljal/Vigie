@@ -12,6 +12,7 @@ import {
 } from "../../lib/ipc";
 import { errorMessage, unwrap } from "../../lib/result";
 import { Button, ErrorText } from "../../components/ui";
+import { t } from "../../i18n";
 
 const FORMAT_LABELS: Record<ImportFormat, string> = {
   bitwarden_csv: "Bitwarden (CSV)",
@@ -50,7 +51,7 @@ export function ImportScreen() {
 
   return (
     <section className="max-w-4xl space-y-5">
-      <h2 className="text-xl font-semibold">Importer des comptes</h2>
+      <h2 className="text-xl font-semibold">{t("Importer des comptes")}</h2>
       <ErrorText>{error}</ErrorText>
 
       {step.name === "pick" && (
@@ -113,12 +114,11 @@ function PickStep({ onPick }: { onPick: () => void }) {
   return (
     <div className="space-y-4">
       <p className="text-sm text-zinc-400">
-        Exporte tes mots de passe depuis Bitwarden (CSV ou JSON non chiffré) ou l'app Mots de passe
-        d'Apple, puis choisis le fichier. Il est lu par le cœur de Vigie : les mots de passe ne
-        passent jamais par l'interface et ne sont jamais enregistrés. Seuls leur force et leur
-        réutilisation sont conservées.
+        {t(
+          "Exporte tes mots de passe depuis Bitwarden (CSV ou JSON non chiffré) ou l'app Mots de passe d'Apple, puis choisis le fichier. Il est lu par le cœur de Vigie : les mots de passe ne passent jamais par l'interface et ne sont jamais enregistrés. Seuls leur force et leur réutilisation sont conservées.",
+        )}
       </p>
-      <Button onClick={onPick}>Choisir un fichier…</Button>
+      <Button onClick={onPick}>{t("Choisir un fichier…")}</Button>
     </div>
   );
 }
@@ -161,13 +161,14 @@ function FormatStep({
   return (
     <div className="space-y-4">
       <p className="text-sm text-zinc-300">
-        Fichier : <strong>{file.name}</strong> ({Math.ceil(file.size_bytes / 1024)} Kio).{" "}
+        {t("Fichier :")} <strong>{file.name}</strong> ({Math.ceil(file.size_bytes / 1024)}{" "}
+        {t("Kio).")}{" "}
         {detected
-          ? `Format détecté : ${FORMAT_LABELS[detected]}.`
-          : "Format non reconnu : indique les colonnes."}
+          ? t("Format détecté : {n1}.", { n1: t(FORMAT_LABELS[detected]) })
+          : t("Format non reconnu : indique les colonnes.")}
       </p>
       <label className="block space-y-1 text-sm">
-        <span className="text-zinc-300">Format</span>
+        <span className="text-zinc-300">{t("Format")}</span>
         <select
           className={sel}
           value={format}
@@ -175,7 +176,7 @@ function FormatStep({
         >
           {(Object.keys(FORMAT_LABELS) as ImportFormat[]).map((f) => (
             <option key={f} value={f}>
-              {FORMAT_LABELS[f]}
+              {t(FORMAT_LABELS[f])}
             </option>
           ))}
         </select>
@@ -184,7 +185,7 @@ function FormatStep({
         <div className="grid grid-cols-2 gap-3">
           {MAP_FIELDS.map(({ key, label }) => (
             <label key={key} className="block space-y-1 text-sm">
-              <span className="text-zinc-300">{label}</span>
+              <span className="text-zinc-300">{t(label)}</span>
               <select
                 className={`${sel} w-full`}
                 value={mapping[key] ?? ""}
@@ -203,10 +204,10 @@ function FormatStep({
       )}
       <div className="flex gap-2">
         <Button disabled={!canStart} onClick={() => onStart(format, generic ? mapping : null)}>
-          Analyser
+          {t("Analyser")}
         </Button>
         <Button variant="ghost" onClick={onBack}>
-          Annuler
+          {t("Annuler")}
         </Button>
       </div>
     </div>
@@ -246,24 +247,30 @@ function PreviewStep({
 
   return (
     <div className="space-y-4">
-      <ul className="flex flex-wrap gap-3 text-sm" aria-label="Résumé">
-        <li className="rounded-lg bg-zinc-900 px-3 py-2">{preview.items.length} entrées</li>
-        <li className="rounded-lg bg-zinc-900 px-3 py-2">{duplicates} doublon(s)</li>
-        <li className="rounded-lg bg-amber-950 px-3 py-2 text-amber-300">
-          {preview.reused_accounts} compte(s) avec un mot de passe réutilisé ({preview.reuse_groups}{" "}
-          groupe(s))
+      <ul className="flex flex-wrap gap-3 text-sm" aria-label={t("Résumé")}>
+        <li className="rounded-lg bg-zinc-900 px-3 py-2">
+          {preview.items.length} {t("entrées")}
         </li>
-        <li className="rounded-lg bg-zinc-900 px-3 py-2">{weak} mot(s) de passe faible(s)</li>
+        <li className="rounded-lg bg-zinc-900 px-3 py-2">
+          {duplicates} {t("doublon(s)")}
+        </li>
+        <li className="rounded-lg bg-amber-950 px-3 py-2 text-amber-300">
+          {preview.reused_accounts} {t("compte(s) avec un mot de passe réutilisé (")}
+          {preview.reuse_groups} {t("groupe(s))")}
+        </li>
+        <li className="rounded-lg bg-zinc-900 px-3 py-2">
+          {weak} {t("mot(s) de passe faible(s)")}
+        </li>
         {checked && (
           <li
             className={`rounded-lg px-3 py-2 ${leaked ? "bg-red-950 text-red-300" : "bg-zinc-900"}`}
           >
-            {leaked} mot(s) de passe dans des fuites
+            {leaked} {t("mot(s) de passe dans des fuites")}
           </li>
         )}
         {preview.skipped_rows > 0 && (
           <li className="rounded-lg bg-zinc-900 px-3 py-2">
-            {preview.skipped_rows} ligne(s) ignorée(s)
+            {preview.skipped_rows} {t("ligne(s) ignorée(s)")}
           </li>
         )}
       </ul>
@@ -273,11 +280,11 @@ function PreviewStep({
           <thead className="sticky top-0 bg-zinc-900 text-xs text-zinc-400">
             <tr>
               <th className="p-2">
-                <span className="sr-only">Importer</span>
+                <span className="sr-only">{t("Importer")}</span>
               </th>
-              <th className="p-2">Compte</th>
-              <th className="p-2">Domaine</th>
-              <th className="p-2">Notes</th>
+              <th className="p-2">{t("Compte")}</th>
+              <th className="p-2">{t("Domaine")}</th>
+              <th className="p-2">{t("Notes")}</th>
             </tr>
           </thead>
           <tbody>
@@ -286,7 +293,7 @@ function PreviewStep({
                 <td className="p-2">
                   <input
                     type="checkbox"
-                    aria-label={`Importer ${i.label}`}
+                    aria-label={t("Importer {label}", { label: i.label })}
                     checked={!excluded.has(i.index)}
                     disabled={!!i.issue}
                     onChange={() => toggle(i.index)}
@@ -300,20 +307,27 @@ function PreviewStep({
                 <td className="space-x-1 p-2 text-xs">
                   {i.issue && <span className="text-red-400">{i.issue}</span>}
                   {(i.duplicate_of != null || i.repeats_index != null) && (
-                    <span className="text-sky-300">doublon</span>
+                    <span className="text-sky-300">{t("doublon")}</span>
                   )}
                   {i.reuse_group != null && (
-                    <span className="text-amber-300">réutilisé (groupe {i.reuse_group})</span>
+                    <span className="text-amber-300">
+                      {t("réutilisé (groupe")} {i.reuse_group})
+                    </span>
                   )}
                   {i.strength != null && i.strength <= 1 && (
-                    <span className="text-red-300">mot de passe {STRENGTH[i.strength]}</span>
+                    <span className="text-red-300">
+                      {t("mot de passe")} {t(STRENGTH[i.strength])}
+                    </span>
                   )}
                   {(i.breach_count ?? 0) > 0 && (
-                    <span className="text-red-400">fuité ×{i.breach_count}</span>
+                    <span className="text-red-400">
+                      {t("fuité ×")}
+                      {i.breach_count}
+                    </span>
                   )}
-                  {i.has_totp && <span className="text-emerald-400">TOTP</span>}
+                  {i.has_totp && <span className="text-emerald-400">{t("TOTP")}</span>}
                   {!i.has_password && !i.issue && (
-                    <span className="text-zinc-500">sans mot de passe</span>
+                    <span className="text-zinc-500">{t("sans mot de passe")}</span>
                   )}
                 </td>
               </tr>
@@ -323,27 +337,27 @@ function PreviewStep({
       </div>
 
       <label className="flex items-center gap-2 text-sm">
-        <span className="text-zinc-300">Doublons :</span>
+        <span className="text-zinc-300">{t("Doublons :")}</span>
         <select
           className={sel}
           value={policy}
           onChange={(e) => setPolicy(e.target.value as DuplicatePolicy)}
         >
-          <option value="merge">Fusionner avec le compte existant</option>
-          <option value="skip">Ignorer</option>
-          <option value="keep_both">Créer quand même</option>
+          <option value="merge">{t("Fusionner avec le compte existant")}</option>
+          <option value="skip">{t("Ignorer")}</option>
+          <option value="keep_both">{t("Créer quand même")}</option>
         </select>
       </label>
 
       <div className="flex flex-wrap items-center gap-2">
         <Button variant="ghost" onClick={onCheckLeaks} disabled={checked}>
-          {checked ? "Fuites vérifiées" : "Vérifier les fuites (envoie des préfixes de hash)"}
+          {checked ? t("Fuites vérifiées") : t("Vérifier les fuites (envoie des préfixes de hash)")}
         </Button>
         <Button disabled={commit.isPending || selected === 0} onClick={() => commit.mutate()}>
-          Importer {selected} compte(s)
+          {t("Importer")} {selected} {t("compte(s)")}
         </Button>
         <Button variant="ghost" onClick={onBack}>
-          Annuler
+          {t("Annuler")}
         </Button>
       </div>
     </div>
@@ -355,20 +369,23 @@ function DoneStep({ outcome, onAgain }: { outcome: ImportOutcome; onAgain: () =>
   return (
     <div className="space-y-4">
       <p className="text-sm text-emerald-400">
-        Import terminé : {r.created} créé(s), {r.merged} fusionné(s), {r.skipped_duplicates}{" "}
-        doublon(s) ignoré(s)
-        {r.skipped_invalid > 0 ? `, ${r.skipped_invalid} invalide(s)` : ""}.
+        {t("Import terminé :")} {r.created} {t("créé(s),")} {r.merged} {t("fusionné(s),")}{" "}
+        {r.skipped_duplicates} {t("doublon(s) ignoré(s)")}
+        {r.skipped_invalid > 0
+          ? t(", {skipped_invalid} invalide(s)", { skipped_invalid: r.skipped_invalid })
+          : ""}
+        .
       </p>
       <div
         role="alert"
         className="rounded-xl border border-amber-700 bg-amber-950 p-4 text-sm text-amber-200"
       >
-        <strong>Supprime maintenant ton fichier d'export</strong>, puis vide la corbeille : il
-        contient tes mots de passe en clair.
+        <strong>{t("Supprime maintenant ton fichier d'export")}</strong>
+        {t(", puis vide la corbeille : il contient tes mots de passe en clair.")}
         <code className="mt-2 block break-all text-xs text-amber-300">{outcome.file_path}</code>
       </div>
       <Button variant="ghost" onClick={onAgain}>
-        Importer un autre fichier
+        {t("Importer un autre fichier")}
       </Button>
     </div>
   );

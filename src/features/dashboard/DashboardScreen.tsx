@@ -12,6 +12,7 @@ import { commands, type Dashboard } from "../../lib/ipc";
 import { unwrap } from "../../lib/result";
 import { ACTION_LABELS, FACTOR_LABELS, scoreColor } from "../../lib/factors";
 import { CRITICALITY_LABELS } from "../../lib/labels";
+import { t } from "../../i18n";
 
 const BUCKETS: Record<string, { label: string; color: string }> = {
   low: { label: "Faible", color: "bg-emerald-500" },
@@ -34,43 +35,43 @@ export function DashboardScreen({
 
   return (
     <section className="max-w-5xl space-y-6 overflow-y-auto pb-8">
-      <h2 className="sr-only">Tableau de bord</h2>
+      <h2 className="sr-only">{t("Tableau de bord")}</h2>
       <div className="grid gap-4 md:grid-cols-4">
         <div className="rounded-2xl border border-zinc-800 p-5 md:col-span-1">
-          <p className="text-xs text-zinc-400">Score global</p>
+          <p className="text-xs text-zinc-400">{t("Score global")}</p>
           <p
             className={`text-5xl font-semibold ${scoreColor(score)}`}
-            aria-label={`Score ${score} sur 100`}
+            aria-label={t("Score {score} sur 100", { score })}
           >
             {score}
           </p>
           <Delta value={data.delta_30d ?? null} />
         </div>
-        <Tile label="Comptes" value={data.accounts_total} />
-        <Tile label="Sans MFA" value={data.without_mfa} warn={data.without_mfa > 0} />
+        <Tile label={t("Comptes")} value={data.accounts_total} />
+        <Tile label={t("Sans MFA")} value={data.without_mfa} warn={data.without_mfa > 0} />
         <Tile
-          label="Critiques sans MFA forte"
+          label={t("Critiques sans MFA forte")}
           value={data.critical_without_strong_mfa}
           warn={data.critical_without_strong_mfa > 0}
         />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <Card title="Évolution du score">
+        <Card title={t("Évolution du score")}>
           <History points={data.history} />
         </Card>
-        <Card title="Répartition du risque">
+        <Card title={t("Répartition du risque")}>
           <Bars
             rows={data.risk_buckets.map((b) => ({
-              label: BUCKETS[b.level].label,
+              label: t(BUCKETS[b.level].label),
               value: b.count,
               color: BUCKETS[b.level].color,
             }))}
           />
-          <h4 className="mt-4 mb-2 text-xs text-zinc-400">Par criticité</h4>
+          <h4 className="mt-4 mb-2 text-xs text-zinc-400">{t("Par criticité")}</h4>
           <Bars
             rows={data.by_criticality.map((c) => ({
-              label: CRITICALITY_LABELS[c.criticality],
+              label: t(CRITICALITY_LABELS[c.criticality]),
               value: c.count,
               color: "bg-sky-500",
             }))}
@@ -80,12 +81,15 @@ export function DashboardScreen({
 
       <div className="grid gap-4 md:grid-cols-2">
         <Card
-          title={`Top ${data.top_actions.length} des actions`}
-          action={`${data.pending_actions} en attente · gain potentiel ${Math.round(data.potential_gain ?? 0)}`}
+          title={t("Top {length} des actions", { length: data.top_actions.length })}
+          action={t("{pending_actions} en attente · gain potentiel {n2}", {
+            pending_actions: data.pending_actions,
+            n2: Math.round(data.potential_gain ?? 0),
+          })}
           onAction={() => onNavigate("actions")}
         >
           {data.top_actions.length === 0 ? (
-            <p className="text-sm text-emerald-400">Rien à corriger. Bravo !</p>
+            <p className="text-sm text-emerald-400">{t("Rien à corriger. Bravo !")}</p>
           ) : (
             <ol className="space-y-2 text-sm">
               {data.top_actions.map((a) => (
@@ -93,7 +97,7 @@ export function DashboardScreen({
                   <span className="min-w-0">
                     <span className="font-medium">{a.account_label}</span>
                     <span className="block truncate text-xs text-zinc-400">
-                      {ACTION_LABELS[a.kind]}
+                      {t(ACTION_LABELS[a.kind])}
                     </span>
                   </span>
                   <span className="shrink-0 text-emerald-400">−{(a.gain ?? 0).toFixed(1)}</span>
@@ -103,9 +107,13 @@ export function DashboardScreen({
           )}
         </Card>
 
-        <Card title="Brèches récentes" action="Voir tout" onAction={() => onNavigate("breaches")}>
+        <Card
+          title={t("Brèches récentes")}
+          action={t("Voir tout")}
+          onAction={() => onNavigate("breaches")}
+        >
           {data.recent_breaches.length === 0 ? (
-            <p className="text-sm text-zinc-500">Aucune brèche pertinente à traiter.</p>
+            <p className="text-sm text-zinc-500">{t("Aucune brèche pertinente à traiter.")}</p>
           ) : (
             <ul className="space-y-2 text-sm">
               {data.recent_breaches.map((m) => (
@@ -122,10 +130,10 @@ export function DashboardScreen({
       </div>
 
       {data.top_factors.length > 0 && (
-        <Card title="Facteurs de risque les plus fréquents">
+        <Card title={t("Facteurs de risque les plus fréquents")}>
           <Bars
             rows={data.top_factors.slice(0, 6).map((f) => ({
-              label: FACTOR_LABELS[f.factor],
+              label: t(FACTOR_LABELS[f.factor]),
               value: f.accounts,
               color: "bg-rose-500",
             }))}
@@ -146,11 +154,12 @@ function Tile({ label, value, warn }: { label: string; value: number; warn?: boo
 }
 
 function Delta({ value }: { value: number | null }) {
-  if (value === null) return <p className="text-xs text-zinc-500">Pas encore d'historique</p>;
+  if (value === null)
+    return <p className="text-xs text-zinc-500">{t("Pas encore d'historique")}</p>;
   const v = Math.round(value * 10) / 10;
   return (
     <p className={`text-xs ${v >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-      {v >= 0 ? "▲" : "▼"} {Math.abs(v)} sur 30 jours
+      {v >= 0 ? "▲" : "▼"} {Math.abs(v)} {t("sur 30 jours")}
     </p>
   );
 }
@@ -207,7 +216,7 @@ function History({ points }: { points: Dashboard["history"] }) {
   if (points.length < 2) {
     return (
       <p className="text-sm text-zinc-500">
-        L'historique se construit jour après jour : reviens demain pour voir la courbe.
+        {t("L'historique se construit jour après jour : reviens demain pour voir la courbe.")}
       </p>
     );
   }
@@ -216,7 +225,11 @@ function History({ points }: { points: Dashboard["history"] }) {
     score: Math.round((p.score ?? 0) * 10) / 10,
   }));
   return (
-    <div role="img" aria-label={`Évolution du score sur ${points.length} jours`} className="h-48">
+    <div
+      role="img"
+      aria-label={t("Évolution du score sur {length} jours", { length: points.length })}
+      className="h-48"
+    >
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
           <CartesianGrid stroke="#27272a" strokeDasharray="3 3" />

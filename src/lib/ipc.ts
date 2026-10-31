@@ -70,6 +70,8 @@ export const commands = {
 	 *  Retourne l'état effectif (faux si l'autorisation est refusée).
 	 */
 	setNotificationsEnabled: (enabled: boolean) => typedError<boolean, CommandError>(__TAURI_INVOKE("set_notifications_enabled", { enabled })),
+	/**  Mémorise la langue de l'interface pour les textes produits côté Rust (notifications). */
+	setLanguage: (lang: string) => typedError<null, CommandError>(__TAURI_INVOKE("set_language", { lang })),
 	/**  Exporte l'inventaire (sans mot de passe). `None` si l'utilisateur annule. */
 	exportInventory: (format: ExportFormat, options: ExportOptions) => typedError<SavedFile | null, CommandError>(__TAURI_INVOKE("export_inventory", { format, options })),
 	/**  Crée une sauvegarde chiffrée (même mot de passe maître / clé de récupération que le coffre). */

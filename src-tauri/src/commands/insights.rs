@@ -84,3 +84,14 @@ pub fn set_notifications_enabled(
     }
     Ok(effective)
 }
+
+/// Mémorise la langue de l'interface pour les textes produits côté Rust (notifications).
+#[tauri::command]
+#[specta::specta]
+pub fn set_language(state: State<'_, AppState>, lang: String) -> CmdResult<()> {
+    let value = if lang == "en" { "en" } else { "fr" };
+    state
+        .with_conn(|c| domain::set_setting(c, scheduler::SETTING_LANGUAGE, value))
+        .ok_or_else(CommandError::locked)??;
+    Ok(())
+}

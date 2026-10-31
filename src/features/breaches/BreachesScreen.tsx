@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { commands, events } from "../../lib/ipc";
 import { errorMessage, unwrap } from "../../lib/result";
 import { Button, ErrorText, Field } from "../../components/ui";
+import { t } from "../../i18n";
 
 const STRENGTH = ["très faible", "faible", "moyen", "bon", "excellent"];
 
@@ -25,7 +26,7 @@ export function BreachesScreen() {
   useRefreshOnIntelUpdate();
   return (
     <section className="max-w-4xl space-y-8 overflow-y-auto pb-8">
-      <h2 className="text-xl font-semibold">Brèches</h2>
+      <h2 className="text-xl font-semibold">{t("Brèches")}</h2>
       <CatalogueCard />
       <MatchesList />
       <PasswordChecker />
@@ -56,15 +57,18 @@ function CatalogueCard() {
     <div className="space-y-3 rounded-xl border border-zinc-800 p-4">
       <p className="text-sm text-zinc-300">
         {status.breaches_synced_at
-          ? `Catalogue public synchronisé le ${status.breaches_synced_at.slice(0, 10)} (${status.breach_count} brèches).`
-          : "Catalogue public jamais synchronisé."}{" "}
+          ? t("Catalogue public synchronisé le {n1} ({breach_count} brèches).", {
+              n1: status.breaches_synced_at.slice(0, 10),
+              breach_count: status.breach_count,
+            })
+          : t("Catalogue public jamais synchronisé.")}{" "}
         <span className="text-zinc-500">
-          Le téléchargement n'envoie aucune donnée de ton inventaire.
+          {t("Le téléchargement n'envoie aucune donnée de ton inventaire.")}
         </span>
       </p>
       <div className="flex flex-wrap items-center gap-4">
         <Button disabled={sync.isPending || status.offline_mode} onClick={() => sync.mutate()}>
-          {sync.isPending ? "Synchronisation…" : "Synchroniser"}
+          {sync.isPending ? t("Synchronisation…") : t("Synchroniser")}
         </Button>
         <label className="flex items-center gap-2 text-sm text-zinc-300">
           <input
@@ -72,13 +76,13 @@ function CatalogueCard() {
             checked={status.offline_mode}
             onChange={(e) => offline.mutate(e.target.checked)}
           />
-          Mode hors ligne (aucun appel réseau)
+          {t("Mode hors ligne (aucun appel réseau)")}
         </label>
       </div>
       {sync.data && (
         <p className="text-sm text-emerald-400">
-          {sync.data.breaches} brèches en cache · {sync.data.stats.relevant} pertinente(s) pour tes
-          comptes.
+          {sync.data.breaches} {t("brèches en cache ·")} {sync.data.stats.relevant}{" "}
+          {t("pertinente(s) pour tes comptes.")}
         </p>
       )}
       <ErrorText>{error}</ErrorText>
@@ -104,10 +108,11 @@ function MatchesList() {
   return (
     <div className="space-y-3">
       <h3 className="text-sm font-medium text-zinc-300">
-        Comptes concernés ({relevant.length} à traiter sur {matches.length})
+        {t("Comptes concernés (")}
+        {relevant.length} {t("à traiter sur")} {matches.length})
       </h3>
       {matches.length === 0 ? (
-        <p className="text-sm text-zinc-500">Aucune brèche connue ne touche tes comptes.</p>
+        <p className="text-sm text-zinc-500">{t("Aucune brèche connue ne touche tes comptes.")}</p>
       ) : (
         <ul className="divide-y divide-zinc-800 rounded-xl border border-zinc-800">
           {matches.map((m) => (
@@ -120,22 +125,22 @@ function MatchesList() {
                   {m.account_label} <span className="text-zinc-500">· {m.title}</span>
                 </p>
                 <p className="truncate text-xs text-zinc-400">
-                  {m.breach_date ?? "date inconnue"} · {m.data_classes.join(", ")} ·{" "}
-                  {m.kind === "email" ? "via ton courriel" : "via le domaine"}
+                  {m.breach_date ?? t("date inconnue")} · {m.data_classes.join(", ")} ·{" "}
+                  {m.kind === "email" ? t("via ton courriel") : t("via le domaine")}
                 </p>
               </div>
               {m.relevant ? (
                 <span className="text-xs text-red-400">
-                  Brèche postérieure au dernier changement
+                  {t("Brèche postérieure au dernier changement")}
                 </span>
               ) : (
-                <span className="text-xs text-zinc-500">Probablement sans impact</span>
+                <span className="text-xs text-zinc-500">{t("Probablement sans impact")}</span>
               )}
               {m.acknowledged_at ? (
-                <span className="text-xs text-zinc-500">Acquittée</span>
+                <span className="text-xs text-zinc-500">{t("Acquittée")}</span>
               ) : (
                 <Button variant="ghost" onClick={() => ack.mutate(m)}>
-                  Acquitter
+                  {t("Acquitter")}
                 </Button>
               )}
             </li>
@@ -170,19 +175,20 @@ function PasswordChecker() {
         setPw(""); // vidé immédiatement : jamais gardé dans l'état React
       }}
     >
-      <h3 className="text-sm font-medium text-zinc-300">Vérifier un mot de passe</h3>
+      <h3 className="text-sm font-medium text-zinc-300">{t("Vérifier un mot de passe")}</h3>
       <p className="text-xs text-zinc-500">
-        Seuls les 5 premiers caractères de son empreinte SHA-1 sont envoyés (k-anonymat). Le mot de
-        passe n'est ni enregistré ni envoyé.
+        {t(
+          "Seuls les 5 premiers caractères de son empreinte SHA-1 sont envoyés (k-anonymat). Le mot de passe n'est ni enregistré ni envoyé.",
+        )}
       </p>
       <Field
-        label="Mot de passe"
+        label={t("Mot de passe")}
         type="password"
         value={pw}
         onChange={(e) => setPw(e.target.value)}
       />
       <Button type="submit" disabled={!pw || check.isPending}>
-        Vérifier
+        {t("Vérifier")}
       </Button>
       <ErrorText>{error}</ErrorText>
       {result && (
@@ -191,9 +197,11 @@ function PasswordChecker() {
           className={`text-sm ${result.breach_count > 0 ? "text-red-400" : "text-emerald-400"}`}
         >
           {result.breach_count > 0
-            ? `Trouvé ${result.breach_count.toLocaleString("fr-CA")} fois dans des fuites.`
-            : "Absent des fuites connues."}{" "}
-          Force : {STRENGTH[result.strength]}.
+            ? t("Trouvé {n1} fois dans des fuites.", {
+                n1: result.breach_count.toLocaleString("fr-CA"),
+              })
+            : t("Absent des fuites connues.")}{" "}
+          {t("Force :")} {t(STRENGTH[result.strength])}.
         </p>
       )}
     </form>
@@ -227,23 +235,27 @@ function EmailCard() {
   if (!status) return null;
   return (
     <div className="max-w-xl space-y-3 rounded-xl border border-zinc-800 p-4">
-      <h3 className="text-sm font-medium text-zinc-300">Vérification par courriel (optionnel)</h3>
+      <h3 className="text-sm font-medium text-zinc-300">
+        {t("Vérification par courriel (optionnel)")}
+      </h3>
       <p className="text-xs text-amber-300">
-        Contrairement aux autres vérifications, tes courriels sont envoyés <strong>en clair</strong>{" "}
-        à Have I Been Pwned, avec ta propre clé API (payante). La clé est stockée dans le Trousseau
-        macOS.
+        {t("Contrairement aux autres vérifications, tes courriels sont envoyés")}{" "}
+        <strong>{t("en clair")}</strong>{" "}
+        {t(
+          "à Have I Been Pwned, avec ta propre clé API (payante). La clé est stockée dans le Trousseau macOS.",
+        )}
       </p>
       {status.has_api_key ? (
         <div className="flex flex-wrap items-center gap-3">
           {confirm ? (
             <Button disabled={run.isPending || status.offline_mode} onClick={() => run.mutate()}>
-              {run.isPending ? "Vérification…" : "Confirmer l'envoi de mes courriels"}
+              {run.isPending ? t("Vérification…") : t("Confirmer l'envoi de mes courriels")}
             </Button>
           ) : (
-            <Button onClick={() => setConfirm(true)}>Vérifier mes courriels…</Button>
+            <Button onClick={() => setConfirm(true)}>{t("Vérifier mes courriels…")}</Button>
           )}
           <Button variant="ghost" onClick={() => clear.mutate()}>
-            Supprimer la clé
+            {t("Supprimer la clé")}
           </Button>
         </div>
       ) : (
@@ -257,21 +269,21 @@ function EmailCard() {
         >
           <div className="flex-1">
             <Field
-              label="Clé API HIBP"
+              label={t("Clé API HIBP")}
               type="password"
               value={key}
               onChange={(e) => setKey(e.target.value)}
             />
           </div>
           <Button type="submit" disabled={!key.trim()}>
-            Enregistrer
+            {t("Enregistrer")}
           </Button>
         </form>
       )}
       {run.data && (
         <p className="text-sm text-emerald-400">
-          {run.data.checked} courriel(s) vérifié(s), {run.data.breached} touché(s),{" "}
-          {run.data.matches} compte(s) concerné(s).
+          {run.data.checked} {t("courriel(s) vérifié(s),")} {run.data.breached} {t("touché(s),")}{" "}
+          {run.data.matches} {t("compte(s) concerné(s).")}
         </p>
       )}
       <ErrorText>{error}</ErrorText>

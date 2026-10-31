@@ -6,6 +6,7 @@ import { VAULT_KEY } from "../../lib/useVault";
 import { Button, Card, ErrorText, Field } from "../../components/ui";
 import { RecoveryKeyScreen } from "./RecoveryKeyScreen";
 import { StrengthMeter } from "./StrengthMeter";
+import { t } from "../../i18n";
 
 export function CreateVaultScreen() {
   const qc = useQueryClient();
@@ -48,14 +49,15 @@ export function CreateVaultScreen() {
   }
 
   return (
-    <Card title="Créer ton coffre">
+    <Card title={t("Créer ton coffre")}>
       <p className="text-sm text-zinc-400">
-        Ce mot de passe maître chiffre tout l'inventaire. Il ne peut pas être récupéré sans la clé
-        de récupération que tu verras ensuite.
+        {t(
+          "Ce mot de passe maître chiffre tout l'inventaire. Il ne peut pas être récupéré sans la clé de récupération que tu verras ensuite.",
+        )}
       </p>
       <form onSubmit={submit} className="space-y-4">
         <Field
-          label="Mot de passe maître"
+          label={t("Mot de passe maître")}
           type="password"
           value={pw}
           onChange={(e) => setPw(e.target.value)}
@@ -63,14 +65,14 @@ export function CreateVaultScreen() {
         />
         <StrengthMeter password={pw} />
         <Field
-          label="Confirmation"
+          label={t("Confirmation")}
           type="password"
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
         />
-        <ErrorText>{mismatch ? "Les mots de passe ne correspondent pas." : error}</ErrorText>
+        <ErrorText>{mismatch ? t("Les mots de passe ne correspondent pas.") : error}</ErrorText>
         <Button type="submit" disabled={busy || !pw || pw !== confirm}>
-          {busy ? "Création…" : "Créer le coffre"}
+          {busy ? t("Création…") : t("Créer le coffre")}
         </Button>
       </form>
     </Card>

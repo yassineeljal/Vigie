@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { commands, type Account, type AccountInput, type MfaKind } from "../../lib/ipc";
 import { errorMessage } from "../../lib/result";
@@ -13,6 +13,7 @@ import {
 import { Button, ErrorText, Field } from "../../components/ui";
 import { WhyScore } from "../score/WhyScore";
 import { useDeleteAccount, useIdentities, useSaveAccount } from "./queries";
+import { t } from "../../i18n";
 
 const EMPTY: AccountInput = {
   domain: "",
@@ -62,6 +63,13 @@ export function AccountForm({
   const del = useDeleteAccount();
   const identities = useIdentities();
 
+  // Échap ferme le panneau (navigation clavier).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
   const set = <K extends keyof AccountInput>(k: K, v: AccountInput[K]) =>
     setF((p) => ({ ...p, [k]: v }));
 
@@ -97,7 +105,7 @@ export function AccountForm({
           ...f,
           tags: tags
             .split(",")
-            .map((t) => t.trim())
+            .map((tag) => tag.trim())
             .filter(Boolean),
         },
       });
@@ -122,36 +130,40 @@ export function AccountForm({
       className="fixed inset-0 z-10 flex justify-end bg-black/60"
       role="dialog"
       aria-modal="true"
-      aria-label={account ? "Modifier le compte" : "Nouveau compte"}
+      aria-label={account ? t("Modifier le compte") : t("Nouveau compte")}
     >
       <form
         onSubmit={submit}
         className="h-full w-full max-w-md space-y-4 overflow-y-auto border-l border-zinc-800 bg-zinc-900 p-6"
       >
         <h2 className="text-xl font-semibold">
-          {account ? "Modifier le compte" : "Nouveau compte"}
+          {account ? t("Modifier le compte") : t("Nouveau compte")}
         </h2>
 
         <Field
-          label="Site (URL ou domaine)"
+          label={t("Site (URL ou domaine)")}
           value={f.domain}
           onChange={(e) => set("domain", e.target.value)}
           autoFocus
         />
         {domainInput && (
           <p className="-mt-2 text-xs text-zinc-400" data-testid="domain-preview">
-            {preview ? `Domaine : ${preview}` : "Domaine invalide"}
+            {preview ? t("Domaine : {preview}", { preview }) : t("Domaine invalide")}
           </p>
         )}
-        <Field label="Libellé" value={f.label} onChange={(e) => set("label", e.target.value)} />
         <Field
-          label="Nom d'utilisateur"
+          label={t("Libellé")}
+          value={f.label}
+          onChange={(e) => set("label", e.target.value)}
+        />
+        <Field
+          label={t("Nom d'utilisateur")}
           value={f.username ?? ""}
           onChange={(e) => set("username", e.target.value || null)}
         />
 
         <label className="block space-y-1 text-sm">
-          <span className="text-zinc-300">Identité de connexion</span>
+          <span className="text-zinc-300">{t("Identité de connexion")}</span>
           <select
             className={selectCls}
             value={f.identity_id ?? ""}
@@ -162,7 +174,7 @@ export function AccountForm({
           </select>
         </label>
         <label className="block space-y-1 text-sm">
-          <span className="text-zinc-300">Identité de récupération</span>
+          <span className="text-zinc-300">{t("Identité de récupération")}</span>
           <select
             className={selectCls}
             value={f.recovery_identity_id ?? ""}
@@ -175,7 +187,7 @@ export function AccountForm({
 
         <div className="grid grid-cols-2 gap-3">
           <label className="block space-y-1 text-sm">
-            <span className="text-zinc-300">Criticité</span>
+            <span className="text-zinc-300">{t("Criticité")}</span>
             <select
               className={selectCls}
               value={f.criticality}
@@ -183,13 +195,13 @@ export function AccountForm({
             >
               {CRITICALITIES.map((c) => (
                 <option key={c} value={c}>
-                  {CRITICALITY_LABELS[c]}
+                  {t(CRITICALITY_LABELS[c])}
                 </option>
               ))}
             </select>
           </label>
           <label className="block space-y-1 text-sm">
-            <span className="text-zinc-300">Statut</span>
+            <span className="text-zinc-300">{t("Statut")}</span>
             <select
               className={selectCls}
               value={f.status}
@@ -197,7 +209,7 @@ export function AccountForm({
             >
               {STATUSES.map((s) => (
                 <option key={s} value={s}>
-                  {STATUS_LABELS[s]}
+                  {t(STATUS_LABELS[s])}
                 </option>
               ))}
             </select>
@@ -205,19 +217,19 @@ export function AccountForm({
         </div>
 
         <Field
-          label="Mot de passe changé le"
+          label={t("Mot de passe changé le")}
           type="date"
           value={f.pwd_changed_at ?? ""}
           onChange={(e) => set("pwd_changed_at", e.target.value || null)}
         />
 
         <fieldset className="space-y-2">
-          <legend className="text-sm text-zinc-300">Méthodes MFA</legend>
+          <legend className="text-sm text-zinc-300">{t("Méthodes MFA")}</legend>
           {MFA_KINDS.map((k) => (
             <div key={k} className="flex items-center justify-between text-sm">
               <label className="flex items-center gap-2">
                 <input type="checkbox" checked={!!hasMfa(k)} onChange={() => toggleMfa(k)} />
-                {MFA_LABELS[k]}
+                {t(MFA_LABELS[k])}
               </label>
               {hasMfa(k) && (
                 <label className="flex items-center gap-2 text-xs text-zinc-400">
@@ -226,7 +238,7 @@ export function AccountForm({
                     checked={hasMfa(k)!.backup_codes}
                     onChange={() => toggleBackup(k)}
                   />
-                  codes de secours
+                  {t("codes de secours")}
                 </label>
               )}
             </div>
@@ -234,12 +246,12 @@ export function AccountForm({
         </fieldset>
 
         <Field
-          label="Étiquettes (séparées par des virgules)"
+          label={t("Étiquettes (séparées par des virgules)")}
           value={tags}
           onChange={(e) => setTags(e.target.value)}
         />
         <label className="block space-y-1 text-sm">
-          <span className="text-zinc-300">Notes (jamais de mot de passe)</span>
+          <span className="text-zinc-300">{t("Notes (jamais de mot de passe)")}</span>
           <textarea
             className={selectCls}
             rows={3}
@@ -253,10 +265,10 @@ export function AccountForm({
         <div className="flex items-center justify-between pt-2">
           <div className="flex gap-2">
             <Button type="submit" disabled={save.isPending || !f.domain.trim() || !f.label.trim()}>
-              Enregistrer
+              {t("Enregistrer")}
             </Button>
             <Button type="button" variant="ghost" onClick={onClose}>
-              Annuler
+              {t("Annuler")}
             </Button>
           </div>
           {account &&
@@ -268,11 +280,11 @@ export function AccountForm({
                   onClose();
                 }}
               >
-                Confirmer la suppression
+                {t("Confirmer la suppression")}
               </Button>
             ) : (
               <Button type="button" variant="ghost" onClick={() => setConfirmDelete(true)}>
-                Supprimer
+                {t("Supprimer")}
               </Button>
             ))}
         </div>

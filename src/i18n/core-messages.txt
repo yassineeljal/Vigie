@@ -1,0 +1,56 @@
+JSON Bitwarden invalide
+URL ou domaine invalide
+aucun coffre à cet emplacement
+aucun fichier sélectionné
+aucun import en cours
+aucune clé API HIBP configurée
+autorisation refusée : active les notifications de Vigie dans Réglages Système
+ce n'est pas un fichier
+choisis une méthode forte : passkey, clé matérielle ou TOTP
+clé API refusée par le service
+clé de récupération invalide
+coffre verrouillé
+colonne nom ou URL introuvable
+contrainte violée (référence ou doublon)
+courriel invalide
+date attendue au format AAAA-MM-JJ
+destination non autorisée
+domaine invalide : {0}
+données invalides : {0}
+déchiffrement impossible (clé incorrecte ou données corrompues)
+en-tête du coffre corrompu ou non supporté
+en-têtes CSV illisibles
+enveloppe mal formée
+erreur crypto : {0}
+erreur d'E/S : {0}
+erreur de base de données : {0}
+erreur de migration : {0}
+export chiffré : réexporte en version non chiffrée
+fichier de sauvegarde invalide ou corrompu
+fichier trop volumineux (20 Mio maximum)
+fichier vide
+format non reconnu : {0}
+hors ligne ou service injoignable
+import annulé
+lecture impossible : {0}
+libellé requis (120 caractères max)
+limite de débit atteinte, réessaie plus tard
+mappage de colonnes requis
+mode hors ligne activé
+mot de passe incorrect pour cette sauvegarde
+mot de passe maître trop faible (score zxcvbn {0}/4, minimum 3)
+mot de passe ou clé de récupération incorrect
+méthode MFA requise
+numéro de téléphone invalide
+ouverture impossible : {0}
+réponse illisible : {0}
+réponse inattendue du service (HTTP {0})
+sauvegarde trop volumineuse
+trop de lignes (50 000 maximum)
+trousseau : {0}
+un coffre existe déjà à cet emplacement
+échec de la dérivation de clé
+écriture CSV impossible
+écriture JSON impossible
+écriture impossible : {0}
+élément introuvable
