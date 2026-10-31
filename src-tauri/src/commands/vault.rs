@@ -19,6 +19,7 @@ pub enum ErrorKind {
     BadCredentials,
     WeakPassword,
     InvalidRecoveryKey,
+    InvalidInput,
     Locked,
     Internal,
 }
@@ -46,7 +47,29 @@ impl From<VaultError> for CommandError {
     }
 }
 
+impl From<crate::domain::DomainError> for CommandError {
+    fn from(e: crate::domain::DomainError) -> Self {
+        use crate::domain::DomainError as D;
+        let kind = match &e {
+            D::InvalidDomain(_) | D::InvalidInput(_) => ErrorKind::InvalidInput,
+            D::NotFound => ErrorKind::NotFound,
+            D::Db(_) => ErrorKind::Internal,
+        };
+        Self {
+            kind,
+            message: e.to_string(),
+        }
+    }
+}
+
 impl CommandError {
+    pub fn locked() -> Self {
+        Self {
+            kind: ErrorKind::Locked,
+            message: "coffre verrouillé".into(),
+        }
+    }
+
     fn invalid_recovery() -> Self {
         Self {
             kind: ErrorKind::InvalidRecoveryKey,
@@ -55,7 +78,7 @@ impl CommandError {
     }
 }
 
-type CmdResult<T> = Result<T, CommandError>;
+pub type CmdResult<T> = Result<T, CommandError>;
 
 #[derive(Debug, Serialize, Type)]
 pub struct VaultStatus {
@@ -170,10 +193,7 @@ pub fn touch_activity(state: State<'_, AppState>) {
 #[specta::specta]
 pub fn set_auto_lock_minutes(state: State<'_, AppState>, minutes: u32) -> CmdResult<()> {
     if !state.is_unlocked() {
-        return Err(CommandError {
-            kind: ErrorKind::Locked,
-            message: "coffre verrouillé".into(),
-        });
+        return Err(CommandError::locked());
     }
     state.set_auto_lock_minutes(minutes)?;
     Ok(())

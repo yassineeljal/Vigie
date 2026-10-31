@@ -29,6 +29,15 @@ fn ipc_builder() -> Builder<tauri::Wry> {
             commands::vault::reset_master_password,
             commands::vault::touch_activity,
             commands::vault::set_auto_lock_minutes,
+            commands::inventory::list_accounts,
+            commands::inventory::get_account,
+            commands::inventory::save_account,
+            commands::inventory::delete_account,
+            commands::inventory::list_tags,
+            commands::inventory::list_identities,
+            commands::inventory::save_identity,
+            commands::inventory::delete_identity,
+            commands::inventory::preview_domain,
         ])
         .events(collect_events![VaultLocked])
 }

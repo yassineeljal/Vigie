@@ -21,6 +21,17 @@ export const commands = {
 	/**  Signale une activité de l'utilisateur (repousse le verrouillage automatique). */
 	touchActivity: () => __TAURI_INVOKE<void>("touch_activity"),
 	setAutoLockMinutes: (minutes: number) => typedError<null, CommandError>(__TAURI_INVOKE("set_auto_lock_minutes", { minutes })),
+	listAccounts: (filter: AccountFilter_Deserialize) => typedError<Account_Serialize[], CommandError>(__TAURI_INVOKE("list_accounts", { filter })),
+	getAccount: (id: number) => typedError<Account_Serialize, CommandError>(__TAURI_INVOKE("get_account", { id })),
+	/**  Crée (`id` absent) ou modifie un compte. */
+	saveAccount: (id: number | null, input: AccountInput_Deserialize) => typedError<Account_Serialize, CommandError>(__TAURI_INVOKE("save_account", { id, input })),
+	deleteAccount: (id: number) => typedError<null, CommandError>(__TAURI_INVOKE("delete_account", { id })),
+	listTags: () => typedError<string[], CommandError>(__TAURI_INVOKE("list_tags")),
+	listIdentities: () => typedError<Identity_Serialize[], CommandError>(__TAURI_INVOKE("list_identities")),
+	saveIdentity: (id: number | null, input: IdentityInput_Deserialize) => typedError<Identity_Serialize, CommandError>(__TAURI_INVOKE("save_identity", { id, input })),
+	deleteIdentity: (id: number) => typedError<null, CommandError>(__TAURI_INVOKE("delete_identity", { id })),
+	/**  Aperçu du domaine normalisé pendant la saisie (US-16). */
+	previewDomain: (input: string) => __TAURI_INVOKE<string | null>("preview_domain", { input }),
 };
 
 /** Events */
@@ -29,17 +40,154 @@ export const events = {
 };
 
 /* Types */
+export type Account = Account_Serialize | Account_Deserialize;
+
+export type AccountFilter = AccountFilter_Serialize | AccountFilter_Deserialize;
+
+export type AccountFilter_Deserialize = {
+	search?: string | null,
+	status?: AccountStatus | null,
+	criticality?: Criticality | null,
+	no_mfa: boolean,
+	tag?: string | null,
+	sort: SortKey,
+	descending: boolean,
+};
+
+export type AccountFilter_Serialize = {
+	search: string | null,
+	status: AccountStatus | null,
+	criticality: Criticality | null,
+	no_mfa: boolean,
+	tag: string | null,
+	sort: SortKey,
+	descending: boolean,
+};
+
+export type AccountInput = AccountInput_Serialize | AccountInput_Deserialize;
+
+export type AccountInput_Deserialize = {
+	/**  URL ou domaine saisi ; normalisé en domaine enregistrable. */
+	domain: string,
+	label: string,
+	identity_id?: number | null,
+	username?: string | null,
+	criticality: Criticality,
+	recovery_identity_id?: number | null,
+	pwd_changed_at?: string | null,
+	status: AccountStatus,
+	notes?: string | null,
+	tags: string[],
+	mfa: MfaMethod[],
+};
+
+export type AccountInput_Serialize = {
+	/**  URL ou domaine saisi ; normalisé en domaine enregistrable. */
+	domain: string,
+	label: string,
+	identity_id: number | null,
+	username: string | null,
+	criticality: Criticality,
+	recovery_identity_id: number | null,
+	pwd_changed_at: string | null,
+	status: AccountStatus,
+	notes: string | null,
+	tags: string[],
+	mfa: MfaMethod[],
+};
+
+export type AccountStatus = "active" | "unused" | "deleted";
+
+export type Account_Deserialize = {
+	id: number,
+	domain: string,
+	label: string,
+	identity_id?: number | null,
+	username?: string | null,
+	criticality: Criticality,
+	recovery_identity_id?: number | null,
+	pwd_changed_at?: string | null,
+	status: AccountStatus,
+	notes?: string | null,
+	tags: string[],
+	mfa: MfaMethod[],
+	created_at: string,
+	updated_at: string,
+};
+
+export type Account_Serialize = {
+	id: number,
+	domain: string,
+	label: string,
+	identity_id: number | null,
+	username: string | null,
+	criticality: Criticality,
+	recovery_identity_id: number | null,
+	pwd_changed_at: string | null,
+	status: AccountStatus,
+	notes: string | null,
+	tags: string[],
+	mfa: MfaMethod[],
+	created_at: string,
+	updated_at: string,
+};
+
 export type CommandError = {
 	kind: ErrorKind,
 	message: string,
 };
 
-export type ErrorKind = "already_exists" | "not_found" | "bad_credentials" | "weak_password" | "invalid_recovery_key" | "locked" | "internal";
+export type Criticality = "critical" | "high" | "medium" | "low";
+
+export type ErrorKind = "already_exists" | "not_found" | "bad_credentials" | "weak_password" | "invalid_recovery_key" | "invalid_input" | "locked" | "internal";
+
+export type Identity = Identity_Serialize | Identity_Deserialize;
+
+export type IdentityInput = IdentityInput_Serialize | IdentityInput_Deserialize;
+
+export type IdentityInput_Deserialize = {
+	kind: IdentityKind,
+	value: string,
+	account_id?: number | null,
+};
+
+export type IdentityInput_Serialize = {
+	kind: IdentityKind,
+	value: string,
+	account_id: number | null,
+};
+
+export type IdentityKind = "email" | "phone";
+
+export type Identity_Deserialize = {
+	id: number,
+	kind: IdentityKind,
+	value: string,
+	/**  Compte (ex. Gmail) auquel cette identité correspond, s'il est dans l'inventaire. */
+	account_id?: number | null,
+};
+
+export type Identity_Serialize = {
+	id: number,
+	kind: IdentityKind,
+	value: string,
+	/**  Compte (ex. Gmail) auquel cette identité correspond, s'il est dans l'inventaire. */
+	account_id: number | null,
+};
+
+export type MfaKind = "passkey" | "hardware_key" | "totp" | "push" | "sms" | "email";
+
+export type MfaMethod = {
+	kind: MfaKind,
+	backup_codes: boolean,
+};
 
 export type Pong = {
 	message: string,
 	version: string,
 };
+
+export type SortKey = "label" | "domain" | "criticality" | "updated_at";
 
 export type VaultLocked = null;
 
