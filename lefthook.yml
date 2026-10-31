@@ -1,0 +1,14 @@
+pre-commit:
+  parallel: true
+  commands:
+    fmt-rust:
+      glob: "*.rs"
+      run: cd src-tauri && cargo fmt --check
+    prettier:
+      glob: "*.{ts,tsx,json,css,html}"
+      run: npx prettier --check {staged_files}
+    lint:
+      glob: "*.{ts,tsx}"
+      run: npm run lint
+    gitleaks:
+      run: gitleaks protect --staged --no-banner

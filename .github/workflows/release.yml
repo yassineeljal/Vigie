@@ -1,0 +1,37 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+      - run: npm ci
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: Vigie ${{ github.ref_name }}
+          releaseDraft: true
+          args: --target universal-apple-darwin
+      - name: Checksums SHA-256
+        run: |
+          cd src-tauri/target/universal-apple-darwin/release/bundle/dmg
+          shasum -a 256 *.dmg | tee SHA256SUMS.txt
+          gh release upload "${{ github.ref_name }}" SHA256SUMS.txt --clobber
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
