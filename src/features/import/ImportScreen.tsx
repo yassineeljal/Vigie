@@ -84,6 +84,13 @@ export function ImportScreen() {
         <PreviewStep
           preview={step.preview}
           onBack={cancel}
+          onCheckLeaks={() =>
+            guard(async () => {
+              await unwrap(commands.importCheckLeaks());
+              const preview = await unwrap(commands.importPreview());
+              setStep({ name: "preview", file: step.file, preview });
+            })
+          }
           onCommit={(policy, excluded) =>
             guard(async () => {
               const outcome = await unwrap(commands.importCommit(policy, excluded));
@@ -208,10 +215,12 @@ function FormatStep({
 function PreviewStep({
   preview,
   onBack,
+  onCheckLeaks,
   onCommit,
 }: {
   preview: ImportPreview;
   onBack: () => void;
+  onCheckLeaks: () => void;
   onCommit: (p: DuplicatePolicy, excluded: number[]) => void;
 }) {
   const [policy, setPolicy] = useState<DuplicatePolicy>("merge");
@@ -230,6 +239,8 @@ function PreviewStep({
   const duplicates = preview.items.filter(
     (i) => i.duplicate_of != null || i.repeats_index != null,
   ).length;
+  const checked = preview.items.some((i) => i.breach_count != null);
+  const leaked = preview.items.filter((i) => (i.breach_count ?? 0) > 0).length;
   const weak = preview.items.filter((i) => i.strength != null && i.strength <= 1).length;
 
   return (
@@ -242,6 +253,13 @@ function PreviewStep({
           groupe(s))
         </li>
         <li className="rounded-lg bg-zinc-900 px-3 py-2">{weak} mot(s) de passe faible(s)</li>
+        {checked && (
+          <li
+            className={`rounded-lg px-3 py-2 ${leaked ? "bg-red-950 text-red-300" : "bg-zinc-900"}`}
+          >
+            {leaked} mot(s) de passe dans des fuites
+          </li>
+        )}
         {preview.skipped_rows > 0 && (
           <li className="rounded-lg bg-zinc-900 px-3 py-2">
             {preview.skipped_rows} ligne(s) ignorée(s)
@@ -289,6 +307,9 @@ function PreviewStep({
                   {i.strength != null && i.strength <= 1 && (
                     <span className="text-red-300">mot de passe {STRENGTH[i.strength]}</span>
                   )}
+                  {(i.breach_count ?? 0) > 0 && (
+                    <span className="text-red-400">fuité ×{i.breach_count}</span>
+                  )}
                   {i.has_totp && <span className="text-emerald-400">TOTP</span>}
                   {!i.has_password && !i.issue && (
                     <span className="text-zinc-500">sans mot de passe</span>
@@ -313,7 +334,10 @@ function PreviewStep({
         </select>
       </label>
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <Button variant="ghost" onClick={onCheckLeaks} disabled={checked}>
+          {checked ? "Fuites vérifiées" : "Vérifier les fuites (envoie des préfixes de hash)"}
+        </Button>
         <Button disabled={commit.isPending || selected === 0} onClick={() => commit.mutate()}>
           Importer {selected} compte(s)
         </Button>

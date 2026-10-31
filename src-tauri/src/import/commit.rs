@@ -125,8 +125,8 @@ pub fn commit(
             if e.parsed.password.is_some() {
                 conn.execute(
                     "INSERT INTO password_check(account_id, checked_at, breach_count, strength, reuse_group) \
-                     VALUES (?1, strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), NULL, ?2, ?3)",
-                    params![account_id, e.strength, groups[i].map(|g| base + g)],
+                     VALUES (?1, strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), ?2, ?3, ?4)",
+                    params![account_id, e.breach_count, e.strength, groups[i].map(|g| base + g)],
                 )?;
             }
         }

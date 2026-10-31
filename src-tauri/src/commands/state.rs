@@ -5,7 +5,10 @@ use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
 use crate::crypto::KdfParams;
+use std::sync::Arc;
+
 use crate::import::ImportSession;
+use crate::intel::{IntelClient, KeychainStore, SecretStore};
 use crate::vault::Vault;
 
 pub const DEFAULT_AUTO_LOCK_MIN: u32 = 5;
@@ -14,6 +17,8 @@ const SETTING_AUTO_LOCK: &str = "auto_lock_minutes";
 pub struct AppState {
     pub dir: PathBuf,
     pub kdf: KdfParams,
+    pub intel: Arc<IntelClient>,
+    pub secrets: Arc<dyn SecretStore>,
     inner: Mutex<Inner>,
 }
 
@@ -31,6 +36,8 @@ impl AppState {
         Self {
             dir,
             kdf,
+            intel: Arc::new(IntelClient::production()),
+            secrets: Arc::new(KeychainStore),
             inner: Mutex::new(Inner {
                 vault: None,
                 import: None,
@@ -111,6 +118,32 @@ impl AppState {
         let out = f(g.vault.as_ref()?.conn(), &session);
         g.picked_path = None;
         Some(out)
+    }
+
+    /// Hash des mots de passe de la session d'import (pour interroger Pwned Passwords).
+    pub fn import_hashes(&self) -> Option<Vec<Option<crate::import::PasswordHash>>> {
+        self.lock_inner()
+            .import
+            .as_ref()
+            .map(|s| s.password_hashes())
+    }
+
+    pub fn import_set_counts(&self, counts: &[Option<u32>]) -> bool {
+        match self.lock_inner().import.as_mut() {
+            Some(s) => {
+                s.set_breach_counts(counts);
+                true
+            }
+            None => false,
+        }
+    }
+
+    /// Reconstruit l'aperçu de la session d'import en cours.
+    pub fn import_preview(
+        &self,
+    ) -> Option<Result<crate::import::ImportPreview, crate::import::ImportError>> {
+        let g = self.lock_inner();
+        Some(g.import.as_ref()?.preview(g.vault.as_ref()?.conn()))
     }
 
     pub fn cancel_import(&self) {

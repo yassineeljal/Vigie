@@ -9,11 +9,16 @@ use super::ImportError;
 use super::formats::{ParseOutcome, ParsedEntry};
 use crate::domain::normalize_domain;
 
+/// SHA-1 d'un mot de passe : (préfixe de 5 caractères, suffixe).
+pub type PasswordHash = (String, zeroize::Zeroizing<String>);
+
 pub struct SessionEntry {
     pub parsed: ParsedEntry,
     pub domain: Option<String>,
     pub issue: Option<String>,
     pub strength: Option<u8>,
+    /// Nombre d'apparitions dans Pwned Passwords ; `None` tant que non vérifié.
+    pub breach_count: Option<u32>,
 }
 
 /// Données d'import gardées en mémoire entre l'aperçu et la validation.
@@ -32,6 +37,7 @@ pub struct PreviewItem {
     pub has_totp: bool,
     pub has_password: bool,
     pub strength: Option<u8>,
+    pub breach_count: Option<u32>,
     /// Compte existant (même domaine et même identifiant).
     pub duplicate_of: Option<u32>,
     /// Entrée précédente du même fichier (même domaine et même identifiant).
@@ -47,12 +53,6 @@ pub struct ImportPreview {
     pub reuse_groups: u32,
     pub reused_accounts: u32,
     pub skipped_rows: u32,
-}
-
-fn zxcvbn_score(pw: &SecretString) -> u8 {
-    // zxcvbn est coûteux sur les longues chaînes : au-delà de 100 caractères le score est 4.
-    let s: String = pw.expose_secret().chars().take(100).collect();
-    u8::from(zxcvbn::zxcvbn(&s, &[]).score())
 }
 
 /// Regroupe les entrées qui partagent le même mot de passe (groupes d'au moins 2).
@@ -96,6 +96,28 @@ pub fn find_duplicate(
 }
 
 impl ImportSession {
+    /// Hash SHA-1 (préfixe, suffixe) de chaque mot de passe, pour interroger Pwned Passwords
+    /// sans sortir les mots de passe du cœur ni garder la session verrouillée pendant le réseau.
+    pub fn password_hashes(&self) -> Vec<Option<PasswordHash>> {
+        self.entries
+            .iter()
+            .map(|e| {
+                (e.domain.is_some())
+                    .then_some(e.parsed.password.as_ref())
+                    .flatten()
+                    .map(crate::intel::sha1_split)
+            })
+            .collect()
+    }
+
+    pub fn set_breach_counts(&mut self, counts: &[Option<u32>]) {
+        for (e, c) in self.entries.iter_mut().zip(counts) {
+            if c.is_some() {
+                e.breach_count = *c;
+            }
+        }
+    }
+
     pub fn build(outcome: ParseOutcome) -> Self {
         let entries = outcome
             .entries
@@ -107,12 +129,13 @@ impl ImportSession {
                 let issue = domain
                     .is_none()
                     .then(|| "URL ou domaine invalide".to_owned());
-                let strength = parsed.password.as_ref().map(zxcvbn_score);
+                let strength = parsed.password.as_ref().map(crate::vault::password_score);
                 SessionEntry {
                     parsed,
                     domain,
                     issue,
                     strength,
+                    breach_count: None,
                 }
             })
             .collect();
@@ -153,6 +176,7 @@ impl ImportSession {
                 has_totp: e.parsed.has_totp,
                 has_password: e.parsed.password.is_some(),
                 strength: e.strength,
+                breach_count: e.breach_count,
                 duplicate_of,
                 repeats_index,
                 reuse_group: groups[i],

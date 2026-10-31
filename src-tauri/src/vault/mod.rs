@@ -17,7 +17,7 @@ use crate::crypto::{
     unwrap_key, wrap_key,
 };
 use header::{AAD_PASSWORD, AAD_RECOVERY, Header};
-pub use policy::check_master_password;
+pub use policy::{check_master_password, password_score};
 
 pub const DB_FILE: &str = "vault.db";
 pub const HEADER_FILE: &str = "vault.header.json";

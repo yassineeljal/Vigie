@@ -20,6 +20,8 @@ pub enum ErrorKind {
     WeakPassword,
     InvalidRecoveryKey,
     InvalidInput,
+    Network,
+    OfflineMode,
     Locked,
     Internal,
 }
@@ -71,6 +73,22 @@ impl From<crate::import::ImportError> for CommandError {
                 kind: ErrorKind::InvalidInput,
                 message: other.to_string(),
             },
+        }
+    }
+}
+
+impl From<crate::intel::IntelError> for CommandError {
+    fn from(e: crate::intel::IntelError) -> Self {
+        use crate::intel::IntelError as I;
+        let kind = match &e {
+            I::OfflineMode => ErrorKind::OfflineMode,
+            I::NoApiKey | I::Unauthorized => ErrorKind::BadCredentials,
+            I::Db(_) | I::Keychain(_) => ErrorKind::Internal,
+            _ => ErrorKind::Network,
+        };
+        Self {
+            kind,
+            message: e.to_string(),
         }
     }
 }

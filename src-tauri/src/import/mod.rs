@@ -11,7 +11,7 @@ mod session;
 
 pub use commit::{DuplicatePolicy, ImportReport, commit};
 pub use formats::{ColumnMapping, ImportFormat, csv_headers, detect, parse};
-pub use session::{ImportPreview, ImportSession};
+pub use session::{ImportPreview, ImportSession, PasswordHash};
 
 /// Lit un export en refusant les fichiers trop gros avant de les charger ; le contenu
 /// (qui contient des mots de passe) est effacé de la mémoire au drop.

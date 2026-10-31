@@ -335,3 +335,27 @@ proptest! {
         }
     }
 }
+
+#[test]
+fn us25_comptes_de_fuite_conserves_sans_mot_de_passe() {
+    let (_d, v) = vault();
+    let mut s = session(APPLE, ImportFormat::ApplePasswords);
+    let hashes = s.password_hashes();
+    assert_eq!(hashes.len(), 3);
+    // Le hash du premier mot de passe est un SHA-1 (préfixe de 5 + suffixe de 35 caractères).
+    let (p, suffix) = hashes[0].as_ref().unwrap();
+    assert_eq!((p.len(), suffix.len()), (5, 35));
+    s.set_breach_counts(&[Some(0), Some(42), None]);
+    commit(v.conn(), &s, DuplicatePolicy::Skip, &[]).unwrap();
+    let counts: Vec<Option<u32>> = v
+        .conn()
+        .prepare("SELECT breach_count FROM password_check ORDER BY account_id")
+        .unwrap()
+        .query_map([], |r| r.get(0))
+        .unwrap()
+        .map(Result::unwrap)
+        .collect();
+    assert_eq!(counts, [Some(0), Some(42), None]);
+    let preview = s.preview(v.conn()).unwrap();
+    assert_eq!(preview.items[1].breach_count, Some(42));
+}

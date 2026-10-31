@@ -405,3 +405,24 @@ pub fn delete_identity(conn: &Connection, id: u32) -> Result<()> {
     }
     Ok(())
 }
+
+// ---------- Réglages (jamais de secret) ----------
+
+pub fn get_setting(conn: &Connection, key: &str) -> Result<Option<String>> {
+    match conn.query_row("SELECT value FROM setting WHERE key=?1", [key], |r| {
+        r.get(0)
+    }) {
+        Ok(v) => Ok(Some(v)),
+        Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+        Err(e) => Err(e.into()),
+    }
+}
+
+pub fn set_setting(conn: &Connection, key: &str, value: &str) -> Result<()> {
+    conn.execute(
+        "INSERT INTO setting(key, value) VALUES (?1, ?2)
+         ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+        params![key, value],
+    )?;
+    Ok(())
+}
