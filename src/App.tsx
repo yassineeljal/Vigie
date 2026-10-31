@@ -76,7 +76,7 @@ export default function App() {
   }, [status?.unlocked]);
 
   if (isError) return <p className="p-6 text-red-400">{t("Cœur Rust injoignable.")}</p>;
-  if (!status) return null;
+  if (!status) return <p className="min-h-screen bg-zinc-950 p-6 text-sm text-zinc-400">…</p>;
   if (!status.exists) {
     if (onboarding === "restore")
       return <RestoreBackup onCancel={() => setOnboarding("welcome")} />;
