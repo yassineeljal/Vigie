@@ -5,6 +5,7 @@ mod domain;
 mod import;
 mod insights;
 mod intel;
+mod portability;
 mod scheduler;
 mod scoring;
 mod vault;
@@ -60,6 +61,9 @@ fn ipc_builder() -> Builder<tauri::Wry> {
             commands::insights::get_recovery_graph,
             commands::insights::get_notifications_enabled,
             commands::insights::set_notifications_enabled,
+            commands::portability::export_inventory,
+            commands::portability::backup_vault,
+            commands::portability::restore_vault_backup,
             commands::score::get_score_report,
             commands::score::list_actions,
             commands::score::complete_action,

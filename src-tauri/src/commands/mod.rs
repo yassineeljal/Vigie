@@ -4,6 +4,7 @@ pub mod import;
 pub mod insights;
 pub mod intel;
 pub mod inventory;
+pub mod portability;
 pub mod score;
 pub mod state;
 pub mod vault;
