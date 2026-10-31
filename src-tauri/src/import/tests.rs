@@ -12,6 +12,8 @@ const BW_JSON: &[u8] = include_bytes!("../../fixtures/bitwarden.json");
 const BW_ENC: &[u8] = include_bytes!("../../fixtures/bitwarden-encrypted.json");
 const APPLE: &[u8] = include_bytes!("../../fixtures/apple.csv");
 const GENERIC: &[u8] = include_bytes!("../../fixtures/generic.csv");
+const CHROME: &[u8] = include_bytes!("../../fixtures/chrome.csv");
+const FIREFOX: &[u8] = include_bytes!("../../fixtures/firefox.csv");
 
 fn vault() -> (TempDir, Vault) {
     let d = TempDir::new().unwrap();
@@ -319,7 +321,7 @@ proptest! {
     #[test]
     fn les_analyseurs_ne_paniquent_jamais(bytes in proptest::collection::vec(any::<u8>(), 0..2048)) {
         let m = ColumnMapping { name: Some("a".into()), url: Some("b".into()), ..Default::default() };
-        for f in [ImportFormat::BitwardenCsv, ImportFormat::BitwardenJson, ImportFormat::ApplePasswords, ImportFormat::GenericCsv] {
+        for f in [ImportFormat::BitwardenCsv, ImportFormat::BitwardenJson, ImportFormat::ApplePasswords, ImportFormat::GenericCsv, ImportFormat::BrowserCsv] {
             let _ = parse(&bytes, f, Some(&m));
         }
         let _ = detect(&bytes);
@@ -358,4 +360,37 @@ fn us25_comptes_de_fuite_conserves_sans_mot_de_passe() {
     assert_eq!(counts, [Some(0), Some(42), None]);
     let preview = s.preview(v.conn()).unwrap();
     assert_eq!(preview.items[1].breach_count, Some(42));
+}
+
+#[test]
+fn navigateurs_chrome_et_firefox() {
+    assert_eq!(detect(CHROME), Some(ImportFormat::BrowserCsv));
+    assert_eq!(detect(FIREFOX), Some(ImportFormat::BrowserCsv));
+    let c = parse(CHROME, ImportFormat::BrowserCsv, None).unwrap();
+    assert_eq!(c.entries.len(), 2);
+    assert_eq!(
+        c.entries[1].notes.as_deref(),
+        Some("une note, avec virgule")
+    );
+    assert!(c.entries.iter().all(|e| e.pwd_changed_at.is_none()));
+
+    let f = parse(FIREFOX, ImportFormat::BrowserCsv, None).unwrap();
+    assert_eq!(f.entries.len(), 2);
+    // 1673308800000 ms = 2023-01-10 ; 0 (inconnu) ne doit pas devenir une fausse date de 1970.
+    assert_eq!(f.entries[0].pwd_changed_at.as_deref(), Some("2023-01-10"));
+    assert_eq!(f.entries[1].pwd_changed_at, None);
+}
+
+#[test]
+fn conversion_des_dates_firefox() {
+    assert_eq!(
+        formats::epoch_ms_to_date(1_673_308_800_000).as_deref(),
+        Some("2023-01-10")
+    );
+    assert_eq!(
+        formats::epoch_ms_to_date(951_782_400_000).as_deref(),
+        Some("2000-02-29")
+    );
+    assert_eq!(formats::epoch_ms_to_date(-1), None);
+    assert_eq!(formats::epoch_ms_to_date(i64::MAX), None);
 }

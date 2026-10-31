@@ -1,0 +1,3 @@
+name,url,username,password,note
+exemple.com,https://www.exemple.com/login,alice,pw-fake-chrome-1,
+Autre,https://autre.org,bob,pw-fake-chrome-1,"une note, avec virgule"

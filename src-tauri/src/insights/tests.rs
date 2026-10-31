@@ -187,3 +187,37 @@ fn graphe_robuste_aux_cycles_et_comptes_supprimes() {
     let g = recovery_graph(c, &rules).unwrap();
     assert!(g.nodes.is_empty() && g.edges.is_empty());
 }
+
+/// NFR-04 : jeu de 1 000 comptes générés — tableau de bord et graphe restent rapides.
+#[test]
+fn mille_comptes_tableau_de_bord_et_graphe_rapides() {
+    let (_d, v) = vault();
+    let c = v.conn();
+    let rules = Rules::v1();
+    let gmail = account(c, "gmail.com", Criticality::Critical, None, &[]);
+    let mail = identity(c, "moi@gmail.com", Some(gmail));
+    c.execute_batch("BEGIN").unwrap();
+    for i in 0..1000 {
+        let mfa: &[MfaKind] = if i % 3 == 0 { &[] } else { &[MfaKind::Totp] };
+        let id = account(
+            c,
+            &format!("site{i}.com"),
+            Criticality::Medium,
+            (i % 2 == 0).then_some(mail),
+            mfa,
+        );
+        c.execute(
+            "INSERT INTO password_check(account_id, checked_at, breach_count, strength, reuse_group) VALUES (?1, '2026-01-01T00:00:00Z', ?2, ?3, ?4)",
+            rusqlite::params![id, (i % 10 == 0).then_some(5), i % 5, (i % 7 == 0).then_some(1)],
+        )
+        .unwrap();
+    }
+    c.execute_batch("COMMIT").unwrap();
+    let start = std::time::Instant::now();
+    let d = dashboard(c, &rules).unwrap();
+    let g = recovery_graph(c, &rules).unwrap();
+    let elapsed = start.elapsed();
+    assert_eq!(d.accounts_total, 1001);
+    assert!(g.nodes.len() > 500);
+    assert!(elapsed < std::time::Duration::from_secs(3), "{elapsed:?}");
+}

@@ -23,7 +23,7 @@ export function Field({
         autoCorrect="off"
         autoCapitalize="off"
         spellCheck={false}
-        className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-zinc-100 outline-none focus:border-emerald-500"
+        className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-zinc-100 outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/60"
         {...props}
       />
     </label>
@@ -35,7 +35,7 @@ export function Button({
   ...props
 }: { variant?: "primary" | "ghost" } & ButtonHTMLAttributes<HTMLButtonElement>) {
   const base =
-    "rounded-lg px-4 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50";
+    "rounded-lg px-4 py-2 text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-400 disabled:cursor-not-allowed disabled:opacity-50";
   const styles =
     variant === "primary"
       ? "bg-emerald-600 text-white hover:bg-emerald-500"

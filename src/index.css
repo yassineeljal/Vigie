@@ -1,1 +1,13 @@
 @import "tailwindcss";
+
+/* Navigation clavier (US-74, NFR-09) : focus toujours visible. */
+:where(select, input[type="checkbox"], summary, [role="listitem"]):focus-visible {
+  outline: 2px solid #34d399;
+  outline-offset: 2px;
+}
+
+@media print {
+  body {
+    background: white !important;
+  }
+}

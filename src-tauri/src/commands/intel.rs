@@ -196,10 +196,11 @@ pub fn spawn_scheduler(app: AppHandle) {
                     }
                     .emit(&app);
                     if report.stats.newly_relevant > 0 {
+                        let lang = state.with_conn(crate::scheduler::language).unwrap_or("fr");
                         notify(
                             &app,
                             &state,
-                            crate::scheduler::breach_message(report.stats.newly_relevant),
+                            crate::scheduler::breach_message(lang, report.stats.newly_relevant),
                         );
                     }
                 }
@@ -219,10 +220,11 @@ pub fn spawn_scheduler(app: AppHandle) {
                     .then_some((pending, gain))
             });
             if let Some(Some((pending, gain))) = reminder {
+                let lang = state.with_conn(crate::scheduler::language).unwrap_or("fr");
                 notify(
                     &app,
                     &state,
-                    crate::scheduler::reminder_message(pending, gain),
+                    crate::scheduler::reminder_message(lang, pending, gain),
                 );
             }
         }

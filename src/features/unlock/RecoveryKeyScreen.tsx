@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button, Card } from "../../components/ui";
+import { t } from "../../i18n";
 
 /** Affiche la clé de récupération une seule fois (imprimable, jamais stockée côté front). */
 export function RecoveryKeyScreen({
@@ -11,10 +12,11 @@ export function RecoveryKeyScreen({
 }) {
   const [saved, setSaved] = useState(false);
   return (
-    <Card title="Ta clé de récupération">
+    <Card title={t("Ta clé de récupération")}>
       <p className="text-sm text-zinc-400 print:hidden">
-        C'est le seul moyen de rouvrir le coffre si tu oublies ton mot de passe maître. Elle ne sera
-        plus jamais affichée. Imprime-la ou note-la, et garde-la hors de cet ordinateur.
+        {t(
+          "C'est le seul moyen de rouvrir le coffre si tu oublies ton mot de passe maître. Elle ne sera plus jamais affichée. Imprime-la ou note-la, et garde-la hors de cet ordinateur.",
+        )}
       </p>
       <p
         data-testid="recovery-key"
@@ -24,14 +26,14 @@ export function RecoveryKeyScreen({
       </p>
       <div className="print:hidden space-y-4">
         <Button variant="ghost" type="button" onClick={() => window.print()}>
-          Imprimer
+          {t("Imprimer")}
         </Button>
         <label className="flex items-start gap-2 text-sm text-zinc-300">
           <input type="checkbox" checked={saved} onChange={(e) => setSaved(e.target.checked)} />
-          J'ai conservé cette clé en lieu sûr.
+          {t("J'ai conservé cette clé en lieu sûr.")}
         </label>
         <Button type="button" disabled={!saved} onClick={onDone}>
-          Continuer
+          {t("Continuer")}
         </Button>
       </div>
     </Card>

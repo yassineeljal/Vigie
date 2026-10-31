@@ -5,6 +5,7 @@ mod domain;
 mod import;
 mod insights;
 mod intel;
+mod portability;
 mod scheduler;
 mod scoring;
 mod vault;
@@ -60,6 +61,10 @@ fn ipc_builder() -> Builder<tauri::Wry> {
             commands::insights::get_recovery_graph,
             commands::insights::get_notifications_enabled,
             commands::insights::set_notifications_enabled,
+            commands::insights::set_language,
+            commands::portability::export_inventory,
+            commands::portability::backup_vault,
+            commands::portability::restore_vault_backup,
             commands::score::get_score_report,
             commands::score::list_actions,
             commands::score::complete_action,
@@ -110,6 +115,8 @@ pub fn run() {
 
 #[cfg(test)]
 mod tests {
+    use std::path::Path;
+
     /// Régénère `src/lib/ipc.ts` (versionné) ; la CI échoue si le fichier diffère.
     #[test]
     fn export_types_ipc() {
@@ -117,5 +124,80 @@ mod tests {
         super::ipc_builder()
             .export(super::Typescript::default(), path)
             .expect("export TS");
+    }
+
+    fn rust_files(dir: &Path, out: &mut Vec<std::path::PathBuf>) {
+        for e in std::fs::read_dir(dir).unwrap().flatten() {
+            let p = e.path();
+            if p.is_dir() {
+                rust_files(&p, out);
+            } else if p.extension().is_some_and(|x| x == "rs") {
+                out.push(p);
+            }
+        }
+    }
+
+    /// M2 : aucun journal ni affichage de débogage dans le code de production, donc aucun
+    /// moyen d'écrire un secret dans des logs. Les tests et le calibrage sont exemptés.
+    #[test]
+    fn aucun_log_ni_debug_dans_le_code_de_production() {
+        let mut files = vec![];
+        rust_files(
+            &Path::new(env!("CARGO_MANIFEST_DIR")).join("src"),
+            &mut files,
+        );
+        let banned = [
+            "println!",
+            "eprintln!",
+            "dbg!",
+            "tracing::",
+            "log::",
+            "print!(",
+        ];
+        for f in files {
+            let name = f.file_name().unwrap().to_string_lossy().into_owned();
+            if name == "tests.rs" || name == "kdf.rs" {
+                continue; // kdf.rs : test de calibrage `#[ignore]`
+            }
+            let text = std::fs::read_to_string(&f).unwrap();
+            // Le code de production est avant le module de tests intégré.
+            let prod = text.split("#[cfg(test)]").next().unwrap();
+            for b in banned {
+                // Occurrence isolée seulement : « dialog:: » ne doit pas déclencher « log:: ».
+                let found = prod.match_indices(b).any(|(i, _)| {
+                    !prod[..i]
+                        .chars()
+                        .next_back()
+                        .is_some_and(|c| c.is_alphanumeric() || c == '_')
+                });
+                assert!(!found, "{} contient {b}", f.display());
+            }
+        }
+    }
+
+    /// M2 : les structures qui portent des mots de passe n'implémentent pas `Debug`.
+    #[test]
+    fn les_types_a_mots_de_passe_n_exposent_pas_debug() {
+        let formats = std::fs::read_to_string(
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("src/import/formats.rs"),
+        )
+        .unwrap();
+        let idx = formats.find("pub struct ParsedEntry").unwrap();
+        let before = &formats[idx.saturating_sub(120)..idx];
+        assert!(
+            !before.contains("Debug"),
+            "ParsedEntry ne doit pas dériver Debug"
+        );
+        let session = std::fs::read_to_string(
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("src/import/session.rs"),
+        )
+        .unwrap();
+        for ty in ["pub struct ImportSession", "pub struct SessionEntry"] {
+            let idx = session.find(ty).unwrap();
+            assert!(
+                !session[idx.saturating_sub(120)..idx].contains("Debug"),
+                "{ty} ne doit pas dériver Debug"
+            );
+        }
     }
 }

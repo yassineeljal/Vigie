@@ -10,6 +10,7 @@ import {
   useSaveIdentity,
 } from "../accounts/queries";
 import { DEFAULT_FILTER } from "../accounts/queries";
+import { t } from "../../i18n";
 
 export function IdentitiesScreen() {
   const { data: identities = [] } = useIdentities();
@@ -34,40 +35,43 @@ export function IdentitiesScreen() {
   const sel = "rounded-lg border border-zinc-700 bg-zinc-950 px-2 py-1.5 text-sm";
   return (
     <section className="max-w-2xl space-y-6">
-      <h2 className="text-xl font-semibold">Identités</h2>
+      <h2 className="text-xl font-semibold">{t("Identités")}</h2>
       <p className="text-sm text-zinc-400">
-        Tes courriels et numéros. Lie un courriel à son compte (ex. ton Gmail) pour repérer les
-        comptes dont dépend la récupération des autres.
+        {t(
+          "Tes courriels et numéros. Lie un courriel à son compte (ex. ton Gmail) pour repérer les comptes dont dépend la récupération des autres.",
+        )}
       </p>
       <form onSubmit={add} className="flex items-end gap-2">
         <select
-          aria-label="Type"
+          aria-label={t("Type")}
           className={sel}
           value={kind}
           onChange={(e) => setKind(e.target.value as IdentityKind)}
         >
           {(Object.keys(IDENTITY_LABELS) as IdentityKind[]).map((k) => (
             <option key={k} value={k}>
-              {IDENTITY_LABELS[k]}
+              {t(IDENTITY_LABELS[k])}
             </option>
           ))}
         </select>
         <div className="flex-1">
-          <Field label="Valeur" value={value} onChange={(e) => setValue(e.target.value)} />
+          <Field label={t("Valeur")} value={value} onChange={(e) => setValue(e.target.value)} />
         </div>
         <Button type="submit" disabled={!value.trim()}>
-          Ajouter
+          {t("Ajouter")}
         </Button>
       </form>
       <ErrorText>{error}</ErrorText>
       <ul className="divide-y divide-zinc-800 rounded-xl border border-zinc-800">
-        {identities.length === 0 && <li className="p-4 text-sm text-zinc-500">Aucune identité.</li>}
+        {identities.length === 0 && (
+          <li className="p-4 text-sm text-zinc-500">{t("Aucune identité.")}</li>
+        )}
         {identities.map((i) => (
           <li key={i.id} className="flex items-center gap-3 p-3 text-sm">
-            <span className="w-24 text-xs text-zinc-400">{IDENTITY_LABELS[i.kind]}</span>
+            <span className="w-24 text-xs text-zinc-400">{t(IDENTITY_LABELS[i.kind])}</span>
             <span className="flex-1 truncate">{i.value}</span>
             <select
-              aria-label={`Compte lié à ${i.value}`}
+              aria-label={t("Compte lié à {value}", { value: i.value })}
               className={sel}
               value={i.account_id ?? ""}
               onChange={(e) =>
@@ -81,7 +85,7 @@ export function IdentitiesScreen() {
                 })
               }
             >
-              <option value="">Aucun compte lié</option>
+              <option value="">{t("Aucun compte lié")}</option>
               {accounts.map((a) => (
                 <option key={a.id} value={a.id}>
                   {a.label}
@@ -90,7 +94,7 @@ export function IdentitiesScreen() {
             </select>
             <Button
               variant="ghost"
-              aria-label={`Supprimer ${i.value}`}
+              aria-label={t("Supprimer {value}", { value: i.value })}
               onClick={() => void del.mutateAsync(i.id)}
             >
               ✕

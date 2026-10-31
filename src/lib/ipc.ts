@@ -70,6 +70,17 @@ export const commands = {
 	 *  Retourne l'état effectif (faux si l'autorisation est refusée).
 	 */
 	setNotificationsEnabled: (enabled: boolean) => typedError<boolean, CommandError>(__TAURI_INVOKE("set_notifications_enabled", { enabled })),
+	/**  Mémorise la langue de l'interface pour les textes produits côté Rust (notifications). */
+	setLanguage: (lang: string) => typedError<null, CommandError>(__TAURI_INVOKE("set_language", { lang })),
+	/**  Exporte l'inventaire (sans mot de passe). `None` si l'utilisateur annule. */
+	exportInventory: (format: ExportFormat, options: ExportOptions) => typedError<SavedFile | null, CommandError>(__TAURI_INVOKE("export_inventory", { format, options })),
+	/**  Crée une sauvegarde chiffrée (même mot de passe maître / clé de récupération que le coffre). */
+	backupVault: () => typedError<SavedFile | null, CommandError>(__TAURI_INVOKE("backup_vault")),
+	/**
+	 *  Restaure une sauvegarde choisie par l'utilisateur. `password` est celui de la sauvegarde.
+	 *  Le coffre en cours est verrouillé puis remplacé (l'ancien est conservé à côté).
+	 */
+	restoreVaultBackup: (password: string) => typedError<boolean, CommandError>(__TAURI_INVOKE("restore_vault_backup", { password })),
 	/**  Score global et score détaillé (facteurs et points) de chaque compte actif. */
 	getScoreReport: () => typedError<ScoreReport, CommandError>(__TAURI_INVOKE("get_score_report")),
 	listActions: (view: PlanView, status: ActionStatus) => typedError<ActionView[], CommandError>(__TAURI_INVOKE("list_actions", { view, status })),
@@ -336,6 +347,12 @@ export type EmailCheckReport = {
 
 export type ErrorKind = "already_exists" | "not_found" | "bad_credentials" | "weak_password" | "invalid_recovery_key" | "invalid_input" | "network" | "offline_mode" | "locked" | "internal";
 
+export type ExportFormat = "json" | "csv";
+
+export type ExportOptions = {
+	include_notes: boolean,
+};
+
 export type Factor = "pwned_password" | "breach_after_change" | "reused_password" | "no_mfa" | "pivot_without_strong_mfa" | "weak_password" | "weak_mfa_only" | "unused_active" | "never_checked";
 
 export type FactorCount = {
@@ -449,7 +466,9 @@ export type Identity_Serialize = {
 	account_id: number | null,
 };
 
-export type ImportFormat = "bitwarden_csv" | "bitwarden_json" | "apple_passwords" | "generic_csv";
+export type ImportFormat = "bitwarden_csv" | "bitwarden_json" | "apple_passwords" | 
+/**  Chrome, Edge, Brave (`name,url,username,password,note`) et Firefox (avec `timePasswordChanged`). */
+"browser_csv" | "generic_csv";
 
 export type ImportOutcome = {
 	report: ImportReport,
@@ -593,6 +612,11 @@ export type RiskBucket = {
 	/**  `low` (L < 25), `moderate` (< 50), `high` (< 75), `severe` (≥ 75) */
 	level: string,
 	count: number,
+};
+
+export type SavedFile = {
+	path: string,
+	size_bytes: number,
 };
 
 export type ScorePoint = {

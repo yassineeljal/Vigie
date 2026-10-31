@@ -22,6 +22,12 @@ afterEach(async () => {
   clearMocks();
 });
 
+async function passWelcome(user: ReturnType<typeof userEvent.setup>) {
+  for (let i = 0; i < 3; i++)
+    await user.click(await screen.findByRole("button", { name: "Suivant" }));
+  await user.click(screen.getByRole("button", { name: "Créer mon coffre" }));
+}
+
 describe("parcours du coffre", () => {
   it("propose la création quand aucun coffre n'existe", async () => {
     mockIPC(
@@ -30,6 +36,8 @@ describe("parcours du coffre", () => {
       { shouldMockEvents: true },
     );
     renderApp();
+    expect(await screen.findByText("Bienvenue dans Vigie")).toBeInTheDocument();
+    await passWelcome(userEvent.setup());
     expect(await screen.findByText("Créer ton coffre")).toBeInTheDocument();
   });
 
@@ -61,6 +69,7 @@ describe("parcours du coffre", () => {
     );
     const user = userEvent.setup();
     renderApp();
+    await passWelcome(user);
     await user.type(
       await screen.findByLabelText("Mot de passe maître"),
       "une phrase de passe solide",

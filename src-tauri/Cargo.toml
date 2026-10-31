@@ -35,7 +35,6 @@ zxcvbn = "3.1.1"
 data-encoding = "2.11.1"
 rusqlite = { version = "0.40", features = ["bundled-sqlcipher-vendored-openssl"] }
 rusqlite_migration = "2.6.0"
-tracing = "0.1.44"
 psl = "2.1.245"
 csv = "1.4.0"
 tauri-plugin-dialog = "2.8.4"
@@ -46,6 +45,7 @@ url = "2.5.8"
 toml = "1.1.8"
 tauri-plugin-opener = "2.7.2"
 tauri-plugin-notification = "2.8.0"
+tempfile = "3.27.0"
 
 
 # Read the optimization guideline for more details: https://tauri.app/concept/size/#cargo-configuration
@@ -58,7 +58,6 @@ strip = true
 
 [dev-dependencies]
 proptest = "1.12.0"
-tempfile = "3.27.0"
 wiremock = "0.6.5"
 
 [target.'cfg(target_os = "macos")'.dependencies]

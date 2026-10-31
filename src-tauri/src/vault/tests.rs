@@ -220,3 +220,20 @@ fn base_alteree_refusee() {
     fs::write(&p, raw).unwrap();
     assert!(Vault::unlock(d.path(), &pw(PW)).is_err());
 }
+
+/// NFR-04 : déverrouillage < 1,5 s avec les paramètres de production.
+/// `cargo test --release unlock_budget -- --ignored --nocapture`
+#[test]
+#[ignore]
+fn unlock_budget() {
+    let d = TempDir::new().unwrap();
+    Vault::create(d.path(), &pw(PW), KdfParams::default()).unwrap();
+    let start = std::time::Instant::now();
+    Vault::unlock(d.path(), &pw(PW)).unwrap();
+    let elapsed = start.elapsed();
+    println!("déverrouillage : {elapsed:?}");
+    assert!(
+        elapsed < std::time::Duration::from_millis(1500),
+        "{elapsed:?}"
+    );
+}

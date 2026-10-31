@@ -42,7 +42,34 @@ fn today(conn: &Connection) -> Result<String, DomainError> {
     )
 }
 
-pub fn breach_message(newly_relevant: u32) -> (String, String) {
+pub const SETTING_LANGUAGE: &str = "language";
+
+/// Langue de l'interface (« fr » par défaut), pour les textes produits côté Rust.
+pub fn language(conn: &Connection) -> &'static str {
+    match domain::get_setting(conn, SETTING_LANGUAGE)
+        .ok()
+        .flatten()
+        .as_deref()
+    {
+        Some("en") => "en",
+        _ => "fr",
+    }
+}
+
+pub fn breach_message(lang: &str, newly_relevant: u32) -> (String, String) {
+    if lang == "en" {
+        return (
+            "New relevant breach".into(),
+            if newly_relevant == 1 {
+                "One of your accounts is affected by a recent breach. Open Vigie to see what to do."
+                    .into()
+            } else {
+                format!(
+                    "{newly_relevant} of your accounts are affected by recent breaches. Open Vigie to see what to do."
+                )
+            },
+        );
+    }
     (
         "Nouvelle brèche pertinente".into(),
         if newly_relevant == 1 {
@@ -56,7 +83,13 @@ pub fn breach_message(newly_relevant: u32) -> (String, String) {
     )
 }
 
-pub fn reminder_message(pending: u32, gain: f64) -> (String, String) {
+pub fn reminder_message(lang: &str, pending: u32, gain: f64) -> (String, String) {
+    if lang == "en" {
+        return (
+            "Weekly reminder".into(),
+            format!("{pending} security action(s) pending (potential gain: {gain:.0} points)."),
+        );
+    }
     (
         "Rappel hebdomadaire".into(),
         format!("{pending} action(s) de sécurité en attente (gain potentiel : {gain:.0} points)."),
@@ -106,9 +139,25 @@ mod tests {
 
     #[test]
     fn messages_sans_donnees_personnelles() {
-        let (t, b) = breach_message(1);
+        let (t, b) = breach_message("fr", 1);
         assert!(t.contains("brèche") && b.contains("Un de tes comptes"));
-        assert!(breach_message(3).1.starts_with("3 de tes comptes"));
-        assert!(reminder_message(4, 62.5).1.contains("4 action(s)"));
+        assert!(breach_message("fr", 3).1.starts_with("3 de tes comptes"));
+        assert!(reminder_message("fr", 4, 62.5).1.contains("4 action(s)"));
+        assert!(breach_message("en", 2).1.starts_with("2 of your accounts"));
+        assert!(
+            reminder_message("en", 4, 62.5)
+                .1
+                .contains("4 security action(s)")
+        );
+    }
+
+    #[test]
+    fn langue_par_defaut_et_reglage() {
+        let (_d, v) = vault();
+        assert_eq!(language(v.conn()), "fr");
+        domain::set_setting(v.conn(), SETTING_LANGUAGE, "en").unwrap();
+        assert_eq!(language(v.conn()), "en");
+        domain::set_setting(v.conn(), SETTING_LANGUAGE, "de").unwrap();
+        assert_eq!(language(v.conn()), "fr");
     }
 }
