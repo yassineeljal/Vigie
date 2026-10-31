@@ -50,6 +50,6 @@ it("dispose les nœuds par niveau et signale les points de défaillance", () => 
   ]);
   expect(nodes[2].ariaLabel).toContain("point de défaillance unique");
   expect(nodes[2].ariaLabel).toContain("criticité critique");
-  expect(String(nodes[2].style?.border)).toContain("#ef4444");
+  expect(String(nodes[2].style?.border)).toContain("var(--danger)");
   expect(edges.map((e) => e.label)).toEqual(["récupération", "connexion"]);
 });

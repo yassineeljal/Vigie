@@ -2,9 +2,20 @@ import { useQueryClient } from "@tanstack/react-query";
 import { commands } from "./lib/ipc";
 import { VAULT_KEY, useVaultLifecycle, useVaultStatus } from "./lib/useVault";
 import { Suspense, lazy, useEffect, useState } from "react";
-import { Button } from "./components/ui";
+import {
+  AtSign,
+  FileInput,
+  LayoutDashboard,
+  ListChecks,
+  Lock,
+  Network,
+  Settings,
+  ShieldAlert,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
+import { Wordmark } from "./components/ui";
 import { ActionsScreen } from "./features/actions/ActionsScreen";
-import { ScoreBadge } from "./features/score/ScoreBadge";
 import { AccountsScreen } from "./features/accounts/AccountsScreen";
 import { ImportScreen } from "./features/import/ImportScreen";
 import { BreachesScreen } from "./features/breaches/BreachesScreen";
@@ -34,16 +45,19 @@ type Tab =
   | "breaches"
   | "settings";
 
-const TABS: [Tab, string][] = [
-  ["dashboard", "Tableau de bord"],
-  ["accounts", "Comptes"],
-  ["actions", "Plan d'action"],
-  ["graph", "Graphe"],
-  ["identities", "Identités"],
-  ["import", "Importer"],
-  ["breaches", "Brèches"],
-  ["settings", "Réglages"],
+const TABS: [Tab, string, LucideIcon][] = [
+  ["dashboard", "Tableau de bord", LayoutDashboard],
+  ["accounts", "Comptes", Users],
+  ["actions", "Plan d'action", ListChecks],
+  ["graph", "Graphe", Network],
+  ["identities", "Identités", AtSign],
+  ["import", "Importer", FileInput],
+  ["breaches", "Brèches", ShieldAlert],
+  ["settings", "Réglages", Settings],
 ];
+
+/** Indices de TABS qui ouvrent un nouveau groupe dans la barre latérale (séparateur). */
+const GROUP_STARTS = new Set([1, 5, 7]);
 
 export default function App() {
   const qc = useQueryClient();
@@ -75,8 +89,8 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status?.unlocked]);
 
-  if (isError) return <p className="p-6 text-red-400">{t("Cœur Rust injoignable.")}</p>;
-  if (!status) return <p className="min-h-screen bg-zinc-950 p-6 text-sm text-zinc-400">…</p>;
+  if (isError) return <p className="p-6 text-danger">{t("Cœur Rust injoignable.")}</p>;
+  if (!status) return <p className="min-h-screen bg-bg p-6 text-sm text-muted">…</p>;
   if (!status.exists) {
     if (onboarding === "restore")
       return <RestoreBackup onCancel={() => setOnboarding("welcome")} />;
@@ -93,40 +107,59 @@ export default function App() {
   if (!status.unlocked) return <UnlockScreen />;
 
   return (
-    <main className="flex h-screen flex-col bg-zinc-950 p-6 text-zinc-100">
-      <header className="mb-6 flex items-center justify-between">
-        <div className="flex items-baseline gap-4">
-          <h1 className="text-2xl font-semibold">{t("Vigie")}</h1>
-          <ScoreBadge />
+    <div className="flex h-screen bg-bg text-ink">
+      <aside className="flex w-60 shrink-0 flex-col border-r border-line bg-surface px-3 py-5">
+        <div className="px-2 pb-6">
+          <Wordmark />
         </div>
-        <nav aria-label={t("Navigation")} className="flex flex-wrap gap-1">
-          {TABS.map(([k, l]) => (
-            <Button
+        <nav aria-label={t("Navigation")} className="flex flex-1 flex-col gap-0.5">
+          {TABS.map(([k, label, Icon], i) => (
+            <div
               key={k}
-              variant={tab === k ? "primary" : "ghost"}
-              aria-current={tab === k ? "page" : undefined}
-              onClick={() => setTab(k)}
+              className={GROUP_STARTS.has(i) ? "mt-3 border-t border-line pt-3" : undefined}
             >
-              {t(l)}
-            </Button>
+              <button
+                aria-current={tab === k ? "page" : undefined}
+                onClick={() => setTab(k)}
+                className={`flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-left text-sm transition-colors ${
+                  tab === k
+                    ? "bg-sunken font-medium text-ink"
+                    : "text-muted hover:bg-sunken hover:text-ink"
+                }`}
+              >
+                <Icon
+                  size={18}
+                  aria-hidden="true"
+                  className={tab === k ? "text-primary" : undefined}
+                />
+                {t(label)}
+              </button>
+            </div>
           ))}
         </nav>
-        <Button variant="ghost" onClick={() => void lock()}>
+        <button
+          onClick={() => void lock()}
+          className="mt-4 flex items-center gap-3 rounded-md border border-line px-2.5 py-2 text-sm text-ink transition-colors hover:bg-sunken"
+        >
+          <Lock size={18} aria-hidden="true" />
           {t("Verrouiller")}
-        </Button>
-      </header>
-      <div className="min-h-0 flex-1">
-        <Suspense fallback={<p className="text-sm text-zinc-500">{t("Chargement…")}</p>}>
-          {tab === "dashboard" && <DashboardScreen onNavigate={setTab} />}
-          {tab === "accounts" && <AccountsScreen />}
-          {tab === "graph" && <GraphScreen />}
-          {tab === "actions" && <ActionsScreen />}
-          {tab === "identities" && <IdentitiesScreen />}
-          {tab === "import" && <ImportScreen />}
-          {tab === "breaches" && <BreachesScreen />}
-          {tab === "settings" && <SettingsScreen autoLockMinutes={status.auto_lock_minutes} />}
-        </Suspense>
-      </div>
-    </main>
+          <kbd className="ml-auto text-xs text-muted">⌘L</kbd>
+        </button>
+      </aside>
+      <main className="min-w-0 flex-1 overflow-hidden">
+        <div className="h-full overflow-y-auto px-10 py-8">
+          <Suspense fallback={<p className="text-sm text-muted">{t("Chargement…")}</p>}>
+            {tab === "dashboard" && <DashboardScreen onNavigate={setTab} />}
+            {tab === "accounts" && <AccountsScreen />}
+            {tab === "graph" && <GraphScreen />}
+            {tab === "actions" && <ActionsScreen />}
+            {tab === "identities" && <IdentitiesScreen />}
+            {tab === "import" && <ImportScreen />}
+            {tab === "breaches" && <BreachesScreen />}
+            {tab === "settings" && <SettingsScreen autoLockMinutes={status.auto_lock_minutes} />}
+          </Suspense>
+        </div>
+      </main>
+    </div>
   );
 }

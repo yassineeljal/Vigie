@@ -10,3 +10,4 @@
 - Sprint 6 : tableau de bord, historique du score, graphe de récupération (React Flow), notifications macOS sans données personnelles.
 - Sprint 7 : export JSON/CSV sans secrets, sauvegarde chiffrée et restauration, interface FR/EN, accueil au premier lancement, navigation au clavier, revue de sécurité (docs/security-review.md), checklist de release.
 - Import des mots de passe enregistrés dans le navigateur (Chrome, Edge, Brave, Firefox) avec date de changement Firefox.
+- Refonte visuelle : barre latérale, thème clair/sombre automatique (« carte marine » / « quart de nuit »), polices Instrument Sans et Instrument Serif embarquées, jauge de score graduée.

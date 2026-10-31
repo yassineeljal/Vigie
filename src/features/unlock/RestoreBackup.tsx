@@ -31,7 +31,7 @@ export function RestoreBackup({ onCancel }: { onCancel: () => void }) {
 
   return (
     <Card title={t("Restaurer une sauvegarde")}>
-      <p className="text-sm text-zinc-400">
+      <p className="text-sm text-muted">
         {t(
           "Choisis un fichier .vigiebak. Entre le mot de passe maître qui protégeait ce coffre. Si un coffre existe déjà ici, il est conservé à côté, renommé.",
         )}

@@ -16,13 +16,13 @@ export function StrengthMeter({ password }: { password: string }) {
   const score = Math.min(data, 3);
   return (
     <div aria-live="polite" className="space-y-1">
-      <div className="h-1.5 rounded bg-zinc-800">
+      <div className="h-1.5 rounded bg-sunken">
         <div
-          className={`h-full rounded ${score >= 3 ? "bg-emerald-500" : "bg-amber-500"}`}
+          className={`h-full rounded ${score >= 3 ? "bg-safe" : "bg-amber-500"}`}
           style={{ width: `${((score + 1) / 4) * 100}%` }}
         />
       </div>
-      <p className="text-xs text-zinc-400">
+      <p className="text-xs text-muted">
         {score >= 3
           ? t("Suffisant")
           : t("{n1} : choisis une phrase de passe plus longue", { n1: t(LABELS[score]) })}

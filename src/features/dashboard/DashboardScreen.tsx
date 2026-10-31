@@ -10,15 +10,17 @@ import {
 } from "recharts";
 import { commands, type Dashboard } from "../../lib/ipc";
 import { unwrap } from "../../lib/result";
-import { ACTION_LABELS, FACTOR_LABELS, scoreColor } from "../../lib/factors";
+import { ACTION_LABELS, FACTOR_LABELS } from "../../lib/factors";
 import { CRITICALITY_LABELS } from "../../lib/labels";
 import { t } from "../../i18n";
+import { Badge, Empty, PageHeader, Panel } from "../../components/ui";
+import { ScoreGauge } from "./ScoreGauge";
 
 const BUCKETS: Record<string, { label: string; color: string }> = {
-  low: { label: "Faible", color: "bg-emerald-500" },
-  moderate: { label: "Modéré", color: "bg-amber-400" },
-  high: { label: "Élevé", color: "bg-orange-500" },
-  severe: { label: "Critique", color: "bg-red-500" },
+  low: { label: "Faible", color: "bg-safe" },
+  moderate: { label: "Modéré", color: "bg-warn" },
+  high: { label: "Élevé", color: "bg-warn" },
+  severe: { label: "Critique", color: "bg-danger" },
 };
 
 export const useDashboard = () =>
@@ -31,36 +33,97 @@ export function DashboardScreen({
 }) {
   const { data } = useDashboard();
   if (!data) return null;
-  const score = Math.round(data.score ?? 100);
+  const score = data.score ?? 100;
 
   return (
-    <section className="max-w-5xl space-y-6 overflow-y-auto pb-8">
-      <h2 className="sr-only">{t("Tableau de bord")}</h2>
-      <div className="grid gap-4 md:grid-cols-4">
-        <div className="rounded-2xl border border-zinc-800 p-5 md:col-span-1">
-          <p className="text-xs text-zinc-400">{t("Score global")}</p>
-          <p
-            className={`text-5xl font-semibold ${scoreColor(score)}`}
-            aria-label={t("Score {score} sur 100", { score })}
-          >
-            {score}
-          </p>
-          <Delta value={data.delta_30d ?? null} />
+    <section className="max-w-5xl space-y-8 pb-10">
+      <PageHeader title={t("Tableau de bord")} />
+
+      <div className="grid items-center gap-8 md:grid-cols-[300px_1fr]">
+        <div>
+          <ScoreGauge score={score} />
+          <div className="mt-2 text-center">
+            <Delta value={data.delta_30d ?? null} />
+          </div>
         </div>
-        <Tile label={t("Comptes")} value={data.accounts_total} />
-        <Tile label={t("Sans MFA")} value={data.without_mfa} warn={data.without_mfa > 0} />
-        <Tile
-          label={t("Critiques sans MFA forte")}
-          value={data.critical_without_strong_mfa}
-          warn={data.critical_without_strong_mfa > 0}
-        />
+        <dl className="grid grid-cols-3 divide-x divide-line">
+          <Stat label={t("Comptes")} value={data.accounts_total} />
+          <Stat label={t("Sans MFA")} value={data.without_mfa} warn={data.without_mfa > 0} />
+          <Stat
+            label={t("Critiques sans MFA forte")}
+            value={data.critical_without_strong_mfa}
+            warn={data.critical_without_strong_mfa > 0}
+          />
+        </dl>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card title={t("Évolution du score")}>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Panel
+          title={t("Top {length} des actions", { length: data.top_actions.length })}
+          action={
+            <button
+              onClick={() => onNavigate("actions")}
+              className="text-xs text-link hover:underline"
+            >
+              {t("{pending_actions} en attente · gain potentiel {n2}", {
+                pending_actions: data.pending_actions,
+                n2: Math.round(data.potential_gain ?? 0),
+              })}
+            </button>
+          }
+        >
+          {data.top_actions.length === 0 ? (
+            <p className="text-sm text-safe">{t("Rien à corriger. Bravo !")}</p>
+          ) : (
+            <ol className="divide-y divide-line">
+              {data.top_actions.map((a) => (
+                <li key={a.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
+                  <span className="min-w-0">
+                    <span className="block font-medium">{a.account_label}</span>
+                    <span className="block truncate text-xs text-muted">
+                      {t(ACTION_LABELS[a.kind])}
+                    </span>
+                  </span>
+                  <Badge tone="safe">−{(a.gain ?? 0).toFixed(1)}</Badge>
+                </li>
+              ))}
+            </ol>
+          )}
+        </Panel>
+
+        <Panel
+          title={t("Brèches récentes")}
+          action={
+            <button
+              onClick={() => onNavigate("breaches")}
+              className="text-xs text-link hover:underline"
+            >
+              {t("Voir tout")}
+            </button>
+          }
+        >
+          {data.recent_breaches.length === 0 ? (
+            <p className="text-sm text-muted">{t("Aucune brèche pertinente à traiter.")}</p>
+          ) : (
+            <ul className="divide-y divide-line">
+              {data.recent_breaches.map((m) => (
+                <li key={`${m.breach_name}-${m.account_id}-${m.kind}`} className="py-2.5 text-sm">
+                  <span className="font-medium">{m.account_label}</span>{" "}
+                  <span className="text-muted">
+                    · {m.title} ({m.breach_date?.slice(0, 7) ?? "?"})
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Panel>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Panel title={t("Évolution du score")}>
           <History points={data.history} />
-        </Card>
-        <Card title={t("Répartition du risque")}>
+        </Panel>
+        <Panel title={t("Répartition du risque")}>
           <Bars
             rows={data.risk_buckets.map((b) => ({
               label: t(BUCKETS[b.level].label),
@@ -68,144 +131,69 @@ export function DashboardScreen({
               color: BUCKETS[b.level].color,
             }))}
           />
-          <h4 className="mt-4 mb-2 text-xs text-zinc-400">{t("Par criticité")}</h4>
+          <h4 className="pt-3 text-xs font-medium text-muted">{t("Par criticité")}</h4>
           <Bars
             rows={data.by_criticality.map((c) => ({
               label: t(CRITICALITY_LABELS[c.criticality]),
               value: c.count,
-              color: "bg-sky-500",
+              color: "bg-primary",
             }))}
           />
-        </Card>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card
-          title={t("Top {length} des actions", { length: data.top_actions.length })}
-          action={t("{pending_actions} en attente · gain potentiel {n2}", {
-            pending_actions: data.pending_actions,
-            n2: Math.round(data.potential_gain ?? 0),
-          })}
-          onAction={() => onNavigate("actions")}
-        >
-          {data.top_actions.length === 0 ? (
-            <p className="text-sm text-emerald-400">{t("Rien à corriger. Bravo !")}</p>
-          ) : (
-            <ol className="space-y-2 text-sm">
-              {data.top_actions.map((a) => (
-                <li key={a.id} className="flex justify-between gap-3">
-                  <span className="min-w-0">
-                    <span className="font-medium">{a.account_label}</span>
-                    <span className="block truncate text-xs text-zinc-400">
-                      {t(ACTION_LABELS[a.kind])}
-                    </span>
-                  </span>
-                  <span className="shrink-0 text-emerald-400">−{(a.gain ?? 0).toFixed(1)}</span>
-                </li>
-              ))}
-            </ol>
-          )}
-        </Card>
-
-        <Card
-          title={t("Brèches récentes")}
-          action={t("Voir tout")}
-          onAction={() => onNavigate("breaches")}
-        >
-          {data.recent_breaches.length === 0 ? (
-            <p className="text-sm text-zinc-500">{t("Aucune brèche pertinente à traiter.")}</p>
-          ) : (
-            <ul className="space-y-2 text-sm">
-              {data.recent_breaches.map((m) => (
-                <li key={`${m.breach_name}-${m.account_id}-${m.kind}`}>
-                  <span className="font-medium">{m.account_label}</span>{" "}
-                  <span className="text-zinc-400">
-                    · {m.title} ({m.breach_date?.slice(0, 7) ?? "?"})
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
+        </Panel>
       </div>
 
       {data.top_factors.length > 0 && (
-        <Card title={t("Facteurs de risque les plus fréquents")}>
+        <Panel title={t("Facteurs de risque les plus fréquents")}>
           <Bars
             rows={data.top_factors.slice(0, 6).map((f) => ({
               label: t(FACTOR_LABELS[f.factor]),
               value: f.accounts,
-              color: "bg-rose-500",
+              color: "bg-danger",
             }))}
           />
-        </Card>
+        </Panel>
       )}
     </section>
   );
 }
 
-function Tile({ label, value, warn }: { label: string; value: number; warn?: boolean }) {
+function Stat({ label, value, warn }: { label: string; value: number; warn?: boolean }) {
   return (
-    <div className="rounded-2xl border border-zinc-800 p-5">
-      <p className="text-xs text-zinc-400">{label}</p>
-      <p className={`text-3xl font-semibold ${warn ? "text-amber-400" : ""}`}>{value}</p>
+    <div className="px-5 first:pl-0">
+      <dd className={`font-display text-5xl leading-none ${warn ? "text-warn" : "text-ink"}`}>
+        {value}
+      </dd>
+      <dt className="mt-2 text-xs text-muted">{label}</dt>
     </div>
   );
 }
 
 function Delta({ value }: { value: number | null }) {
-  if (value === null)
-    return <p className="text-xs text-zinc-500">{t("Pas encore d'historique")}</p>;
+  if (value === null) return <p className="text-xs text-muted">{t("Pas encore d'historique")}</p>;
   const v = Math.round(value * 10) / 10;
   return (
-    <p className={`text-xs ${v >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+    <p className={`text-sm ${v >= 0 ? "text-safe" : "text-danger"}`}>
       {v >= 0 ? "▲" : "▼"} {Math.abs(v)} {t("sur 30 jours")}
     </p>
-  );
-}
-
-function Card({
-  title,
-  action,
-  onAction,
-  children,
-}: {
-  title: string;
-  action?: string;
-  onAction?: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-3 rounded-2xl border border-zinc-800 p-5">
-      <div className="flex items-baseline justify-between gap-3">
-        <h3 className="text-sm font-medium text-zinc-300">{title}</h3>
-        {action && (
-          <button onClick={onAction} className="text-xs text-sky-300 hover:underline">
-            {action}
-          </button>
-        )}
-      </div>
-      {children}
-    </div>
   );
 }
 
 function Bars({ rows }: { rows: { label: string; value: number; color: string }[] }) {
   const max = Math.max(1, ...rows.map((r) => r.value));
   return (
-    <ul className="space-y-1.5">
+    <ul className="space-y-2">
       {rows.map((r) => (
-        <li key={r.label} className="grid grid-cols-[9rem_1fr_2rem] items-center gap-2 text-xs">
-          <span className="truncate text-zinc-300" title={r.label}>
+        <li key={r.label} className="grid grid-cols-[10rem_1fr_2rem] items-center gap-3 text-xs">
+          <span className="truncate text-ink" title={r.label}>
             {r.label}
           </span>
-          <span className="h-2 rounded bg-zinc-800">
+          <span className="h-1.5 rounded-full bg-sunken">
             <span
-              className={`block h-full rounded ${r.color}`}
+              className={`block h-full rounded-full ${r.color}`}
               style={{ width: `${(r.value / max) * 100}%` }}
             />
           </span>
-          <span className="text-right text-zinc-400">{r.value}</span>
+          <span className="text-right text-muted">{r.value}</span>
         </li>
       ))}
     </ul>
@@ -215,9 +203,9 @@ function Bars({ rows }: { rows: { label: string; value: number; color: string }[
 function History({ points }: { points: Dashboard["history"] }) {
   if (points.length < 2) {
     return (
-      <p className="text-sm text-zinc-500">
+      <Empty>
         {t("L'historique se construit jour après jour : reviens demain pour voir la courbe.")}
-      </p>
+      </Empty>
     );
   }
   const data = points.map((p) => ({
@@ -232,11 +220,23 @@ function History({ points }: { points: Dashboard["history"] }) {
     >
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-          <CartesianGrid stroke="#27272a" strokeDasharray="3 3" />
-          <XAxis dataKey="date" stroke="#71717a" fontSize={11} />
-          <YAxis domain={[0, 100]} stroke="#71717a" fontSize={11} />
-          <Tooltip contentStyle={{ background: "#18181b", border: "1px solid #3f3f46" }} />
-          <Line type="monotone" dataKey="score" stroke="#34d399" strokeWidth={2} dot={false} />
+          <CartesianGrid stroke="var(--line)" strokeDasharray="3 3" />
+          <XAxis dataKey="date" stroke="var(--muted)" fontSize={11} />
+          <YAxis domain={[0, 100]} stroke="var(--muted)" fontSize={11} />
+          <Tooltip
+            contentStyle={{
+              background: "var(--surface)",
+              border: "1px solid var(--line)",
+              color: "var(--ink)",
+            }}
+          />
+          <Line
+            type="monotone"
+            dataKey="score"
+            stroke="var(--primary)"
+            strokeWidth={2}
+            dot={false}
+          />
         </LineChart>
       </ResponsiveContainer>
     </div>

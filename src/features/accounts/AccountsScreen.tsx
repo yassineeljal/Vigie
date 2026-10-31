@@ -8,7 +8,7 @@ import {
   STATUS_LABELS,
   initials,
 } from "../../lib/labels";
-import { Button } from "../../components/ui";
+import { Badge, Button, Empty, PageHeader } from "../../components/ui";
 import { AccountForm } from "./AccountForm";
 import { DEFAULT_FILTER, useAccounts, useTags } from "./queries";
 import { t } from "../../i18n";
@@ -20,12 +20,12 @@ const SORTS: { value: SortKey; label: string }[] = [
   { value: "updated_at", label: "Modifié" },
 ];
 const CRIT_DOT: Record<string, string> = {
-  critical: "bg-red-500",
-  high: "bg-orange-500",
-  medium: "bg-amber-400",
+  critical: "bg-danger",
+  high: "bg-warn",
+  medium: "bg-warn",
   low: "bg-zinc-500",
 };
-const sel = "rounded-lg border border-zinc-700 bg-zinc-950 px-2 py-1.5 text-sm";
+const sel = "rounded-md border border-line bg-surface px-2.5 py-2 text-sm text-ink";
 
 function useDebounced<T>(value: T, ms: number): T {
   const [v, setV] = useState(value);
@@ -58,6 +58,17 @@ export function AccountsScreen() {
 
   return (
     <section className="flex h-full flex-col gap-4">
+      <PageHeader
+        title={t("Comptes")}
+        aside={
+          <div className="flex items-center gap-3">
+            <p className="text-sm text-muted" aria-live="polite">
+              {accounts.length} {t("compte(s)")}
+            </p>
+            <Button onClick={() => setEditing("new")}>{t("Ajouter un compte")}</Button>
+          </div>
+        }
+      />
       <div className="flex flex-wrap items-center gap-2">
         <input
           type="search"
@@ -108,7 +119,7 @@ export function AccountsScreen() {
             </option>
           ))}
         </select>
-        <label className="flex items-center gap-1.5 text-sm text-zinc-300">
+        <label className="flex items-center gap-1.5 text-sm text-ink">
           <input
             type="checkbox"
             checked={filter.no_mfa}
@@ -135,25 +146,18 @@ export function AccountsScreen() {
         >
           {filter.descending ? "↓" : "↑"}
         </Button>
-        <div className="ml-auto">
-          <Button onClick={() => setEditing("new")}>{t("Ajouter un compte")}</Button>
-        </div>
       </div>
-
-      <p className="text-xs text-zinc-500" aria-live="polite">
-        {accounts.length} {t("compte(s)")}
-      </p>
 
       <div
         ref={parentRef}
-        className="min-h-0 flex-1 overflow-auto rounded-xl border border-zinc-800"
+        className="min-h-0 flex-1 overflow-auto rounded-xl border border-line bg-surface"
         role="list"
         aria-label={t("Comptes")}
       >
         {accounts.length === 0 ? (
-          <p className="p-8 text-center text-sm text-zinc-500">
-            {t("Aucun compte. Ajoutes-en un pour commencer.")}
-          </p>
+          <div className="p-6">
+            <Empty>{t("Aucun compte. Ajoutes-en un pour commencer.")}</Empty>
+          </div>
         ) : (
           <div style={{ height: virt.getTotalSize(), position: "relative" }}>
             {virt.getVirtualItems().map((row) => {
@@ -163,18 +167,18 @@ export function AccountsScreen() {
                   key={a.id}
                   role="listitem"
                   onClick={() => setEditing(a)}
-                  className="absolute left-0 flex w-full items-center gap-3 border-b border-zinc-800/70 px-4 text-left hover:bg-zinc-900 focus-visible:bg-zinc-900"
+                  className="absolute left-0 flex w-full items-center gap-3 border-b border-line px-4 text-left hover:bg-sunken focus-visible:bg-sunken"
                   style={{ height: row.size, transform: `translateY(${row.start}px)` }}
                 >
                   <span
                     aria-hidden
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-xs font-semibold"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-sunken font-display text-lg leading-none text-primary"
                   >
                     {initials(a.label)}
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium">{a.label}</span>
-                    <span className="block truncate text-xs text-zinc-400">
+                    <span className="block truncate text-xs text-muted">
                       {a.domain}
                       {a.username ? t(" · {username}", { username: a.username }) : ""}
                     </span>
@@ -183,19 +187,17 @@ export function AccountsScreen() {
                     {a.tags.slice(0, 3).map((tag) => (
                       <span
                         key={tag}
-                        className="rounded bg-zinc-800 px-1.5 py-0.5 text-xs text-zinc-300"
+                        className="rounded-full border border-line px-2 py-0.5 text-xs text-muted"
                       >
                         {tag}
                       </span>
                     ))}
                   </span>
-                  <span className={`text-xs ${a.mfa.length ? "text-emerald-400" : "text-red-400"}`}>
+                  <Badge tone={a.mfa.length ? "safe" : "danger"}>
                     {a.mfa.length ? t("MFA ×{length}", { length: a.mfa.length }) : t("Sans MFA")}
-                  </span>
-                  {a.status !== "active" && (
-                    <span className="text-xs text-zinc-400">{t(STATUS_LABELS[a.status])}</span>
-                  )}
-                  <span className="flex items-center gap-1.5 text-xs text-zinc-300">
+                  </Badge>
+                  {a.status !== "active" && <Badge tone="warn">{t(STATUS_LABELS[a.status])}</Badge>}
+                  <span className="flex items-center gap-1.5 text-xs text-ink">
                     <span className={`h-2 w-2 rounded-full ${CRIT_DOT[a.criticality]}`} />
                     {t(CRITICALITY_LABELS[a.criticality])}
                   </span>

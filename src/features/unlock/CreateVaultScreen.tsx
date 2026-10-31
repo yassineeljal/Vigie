@@ -50,7 +50,7 @@ export function CreateVaultScreen() {
 
   return (
     <Card title={t("Créer ton coffre")}>
-      <p className="text-sm text-zinc-400">
+      <p className="text-sm text-muted">
         {t(
           "Ce mot de passe maître chiffre tout l'inventaire. Il ne peut pas être récupéré sans la clé de récupération que tu verras ensuite.",
         )}

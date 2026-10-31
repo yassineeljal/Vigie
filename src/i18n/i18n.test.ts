@@ -31,7 +31,8 @@ function usedKeys(): Set<string> {
     ))
       keys.add(lit(m[1]));
     for (const m of text.matchAll(/\b(?:title|body):\s*"((?:[^"\\]|\\.)*)"/g)) keys.add(lit(m[1]));
-    for (const m of text.matchAll(/\["\w+",\s*"((?:[^"\\]|\\.)*)"\]/g)) keys.add(lit(m[1]));
+    for (const m of text.matchAll(/\["\w+",\s*"((?:[^"\\]|\\.)*)"(?:,\s*\w+)?\]/g))
+      keys.add(lit(m[1]));
     for (const m of text.matchAll(/^(?:const|export const) (?:STRENGTH|LABELS) = \[([^\]]*)\]/gm)) {
       for (const s of m[1].matchAll(/"((?:[^"\\]|\\.)*)"/g)) keys.add(lit(s[1]));
     }

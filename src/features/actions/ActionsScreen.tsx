@@ -10,12 +10,12 @@ import {
 import { errorMessage, unwrap } from "../../lib/result";
 import { ACTION_LABELS, FACTOR_LABELS } from "../../lib/factors";
 import { MFA_LABELS } from "../../lib/labels";
-import { Button, ErrorText } from "../../components/ui";
+import { Button, Empty, ErrorText, PageHeader } from "../../components/ui";
 import { ScoreBadge } from "../score/ScoreBadge";
 import { t } from "../../i18n";
 
 const STRONG: MfaKind[] = ["passkey", "totp", "hardware_key"];
-const sel = "rounded-lg border border-zinc-700 bg-zinc-950 px-2 py-1.5 text-sm";
+const sel = "rounded-md border border-line bg-surface px-2.5 py-2 text-sm text-ink";
 const STATUS_TABS: { value: ActionStatus; label: string }[] = [
   { value: "todo", label: "À faire" },
   { value: "done", label: "Faites" },
@@ -51,11 +51,8 @@ export function ActionsScreen() {
   });
 
   return (
-    <section className="max-w-4xl space-y-5 overflow-y-auto pb-8">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-xl font-semibold">{t("Plan d'action")}</h2>
-        <ScoreBadge />
-      </div>
+    <section className="max-w-4xl space-y-6 pb-10">
+      <PageHeader title={t("Plan d'action")} aside={<ScoreBadge />} />
 
       <div className="flex flex-wrap items-center gap-3">
         <div role="group" aria-label={t("Tri")} className="flex gap-1">
@@ -90,11 +87,11 @@ export function ActionsScreen() {
       <ErrorText>{error}</ErrorText>
 
       {actions.length === 0 ? (
-        <p className="text-sm text-zinc-500">
+        <Empty>
           {status === "todo" ? t("Rien à corriger pour le moment. Bravo !") : t("Aucune action.")}
-        </p>
+        </Empty>
       ) : (
-        <ol className="space-y-3">
+        <ol>
           {actions.map((a) => (
             <ActionCard
               key={a.id}
@@ -142,24 +139,25 @@ function ActionCard({
   const hint = mfaHint(a);
 
   return (
-    <li className="space-y-3 rounded-xl border border-zinc-800 p-4">
+    <li className="space-y-3 border-b border-line py-5 last:border-b-0">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <p className="font-medium">
-            {a.account_label}{" "}
-            <span className="text-sm font-normal text-zinc-500">· {a.domain}</span>
+            {a.account_label} <span className="text-sm font-normal text-muted">· {a.domain}</span>
           </p>
-          <p className="text-sm text-zinc-300">{t(ACTION_LABELS[a.kind])}</p>
-          {hint && <p className="text-xs text-sky-300">{hint}</p>}
+          <p className="text-sm text-ink">{t(ACTION_LABELS[a.kind])}</p>
+          {hint && <p className="text-xs text-link">{hint}</p>}
           {a.factors.length > 0 && (
-            <p className="mt-1 text-xs text-zinc-500">
+            <p className="mt-1 text-xs text-muted">
               {t("Corrige :")} {a.factors.map((f) => t(FACTOR_LABELS[f])).join(" · ")}
             </p>
           )}
         </div>
-        <dl className="shrink-0 text-right text-xs text-zinc-400">
+        <dl className="shrink-0 text-right text-xs text-muted">
           <dt className="sr-only">{t("Gain")}</dt>
-          <dd className="text-base font-semibold text-emerald-400">−{(a.gain ?? 0).toFixed(1)}</dd>
+          <dd className="font-display text-4xl leading-none text-safe">
+            −{(a.gain ?? 0).toFixed(1)}
+          </dd>
           <dt className="sr-only">{t("Effort")}</dt>
           <dd>
             {a.effort_min} {t("min")}

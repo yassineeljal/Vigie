@@ -284,7 +284,6 @@ export const en: Record<string, string> = {
   Valeur: "Value",
   "Verrouillage automatique après inactivité": "Auto-lock after inactivity",
   Verrouiller: "Lock",
-  Vigie: "Vigie",
   "Vigie est verrouillé": "Vigie is locked",
   "Vigie inventorie tes comptes en ligne, repère les risques (MFA absente, mot de passe réutilisé ou fuité, brèches) et te dit quoi corriger en premier. Tout reste sur ton ordinateur, dans un coffre chiffré.":
     "Vigie inventories your online accounts, spots the risks (missing MFA, reused or leaked passwords, breaches) and tells you what to fix first. Everything stays on your computer, in an encrypted vault.",

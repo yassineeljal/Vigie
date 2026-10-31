@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { IdentityKind } from "../../lib/ipc";
 import { errorMessage } from "../../lib/result";
 import { IDENTITY_LABELS } from "../../lib/labels";
-import { Button, ErrorText, Field } from "../../components/ui";
+import { Button, ErrorText, Field, PageHeader } from "../../components/ui";
 import {
   useAccounts,
   useDeleteIdentity,
@@ -32,15 +32,14 @@ export function IdentitiesScreen() {
     }
   }
 
-  const sel = "rounded-lg border border-zinc-700 bg-zinc-950 px-2 py-1.5 text-sm";
+  const sel = "rounded-md border border-line bg-surface px-2.5 py-2 text-sm text-ink";
   return (
     <section className="max-w-2xl space-y-6">
-      <h2 className="text-xl font-semibold">{t("Identités")}</h2>
-      <p className="text-sm text-zinc-400">
+      <PageHeader title={t("Identités")}>
         {t(
           "Tes courriels et numéros. Lie un courriel à son compte (ex. ton Gmail) pour repérer les comptes dont dépend la récupération des autres.",
         )}
-      </p>
+      </PageHeader>
       <form onSubmit={add} className="flex items-end gap-2">
         <select
           aria-label={t("Type")}
@@ -62,13 +61,13 @@ export function IdentitiesScreen() {
         </Button>
       </form>
       <ErrorText>{error}</ErrorText>
-      <ul className="divide-y divide-zinc-800 rounded-xl border border-zinc-800">
+      <ul className="divide-y divide-zinc-800 rounded-xl border border-line">
         {identities.length === 0 && (
-          <li className="p-4 text-sm text-zinc-500">{t("Aucune identité.")}</li>
+          <li className="p-4 text-sm text-muted">{t("Aucune identité.")}</li>
         )}
         {identities.map((i) => (
           <li key={i.id} className="flex items-center gap-3 p-3 text-sm">
-            <span className="w-24 text-xs text-zinc-400">{t(IDENTITY_LABELS[i.kind])}</span>
+            <span className="w-24 text-xs text-muted">{t(IDENTITY_LABELS[i.kind])}</span>
             <span className="flex-1 truncate">{i.value}</span>
             <select
               aria-label={t("Compte lié à {value}", { value: i.value })}

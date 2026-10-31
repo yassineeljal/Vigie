@@ -48,13 +48,13 @@ export function DataSection() {
   return (
     <div className="max-w-xl space-y-6">
       <div className="space-y-2">
-        <h3 className="text-sm font-medium text-zinc-300">{t("Exporter l'inventaire")}</h3>
-        <p className="text-xs text-zinc-500">
+        <h3 className="text-sm font-medium text-ink">{t("Exporter l'inventaire")}</h3>
+        <p className="text-xs text-muted">
           {t(
             "Aucun mot de passe n'est exporté (Vigie n'en stocke pas). Les cellules CSV dangereuses pour un tableur sont neutralisées.",
           )}
         </p>
-        <label className="flex items-center gap-2 text-sm text-zinc-300">
+        <label className="flex items-center gap-2 text-sm text-ink">
           <input type="checkbox" checked={notes} onChange={(e) => setNotes(e.target.checked)} />
           {t("Inclure les notes")}
         </label>
@@ -69,8 +69,8 @@ export function DataSection() {
       </div>
 
       <div className="space-y-2">
-        <h3 className="text-sm font-medium text-zinc-300">{t("Sauvegarde chiffrée")}</h3>
-        <p className="text-xs text-zinc-500">
+        <h3 className="text-sm font-medium text-ink">{t("Sauvegarde chiffrée")}</h3>
+        <p className="text-xs text-muted">
           {t(
             "Le fichier .vigiebak reste chiffré : il s'ouvre avec ton mot de passe maître (ou ta clé de récupération).",
           )}
@@ -89,20 +89,20 @@ export function DataSection() {
       </div>
 
       <form onSubmit={restore} className="space-y-2">
-        <h3 className="text-sm font-medium text-zinc-300">{t("Restaurer une sauvegarde")}</h3>
-        <p className="text-xs text-zinc-500">
+        <h3 className="text-sm font-medium text-ink">{t("Restaurer une sauvegarde")}</h3>
+        <p className="text-xs text-muted">
           {t(
             "Remplace le coffre actuel (conservé à côté, renommé) et te redemande le mot de passe de la sauvegarde.",
           )}
         </p>
         <label className="block space-y-1 text-sm">
-          <span className="text-zinc-300">{t("Mot de passe maître de la sauvegarde")}</span>
+          <span className="text-ink">{t("Mot de passe maître de la sauvegarde")}</span>
           <input
             type="password"
             autoComplete="off"
             value={restorePw}
             onChange={(e) => setRestorePw(e.target.value)}
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-zinc-100"
+            className="w-full rounded-md border border-line bg-surface px-3 py-2 text-ink"
           />
         </label>
         <Button type="submit" variant="ghost" disabled={!restorePw}>
@@ -112,7 +112,7 @@ export function DataSection() {
 
       {msg &&
         (msg.ok ? (
-          <p role="status" className="text-sm text-emerald-400">
+          <p role="status" className="text-sm text-safe">
             {msg.text}
           </p>
         ) : (
