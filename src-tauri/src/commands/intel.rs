@@ -177,25 +177,64 @@ pub fn acknowledge_breach_match(
     })
 }
 
-/// Synchronisation périodique : toutes les 24 h, si le coffre est ouvert et le mode hors ligne désactivé.
+/// Tâches périodiques (toutes les 15 min, coffre ouvert) : synchronisation quotidienne du
+/// catalogue et de 2fa.directory, point du jour de l'historique, notifications.
 pub fn spawn_scheduler(app: AppHandle) {
     tauri::async_runtime::spawn(async move {
         loop {
             tokio::time::sleep(Duration::from_secs(15 * 60)).await;
             let state = app.state::<AppState>();
-            if !state.is_unlocked() || due_for_sync(&state).is_none_or(|due| !due) {
+            if !state.is_unlocked() {
                 continue;
             }
-            // Échec silencieux (hors ligne, limite de débit) : le cache reste utilisable.
-            let _ = super::score::sync_mfa(&state).await;
-            if let Ok(report) = sync_catalogue(&state).await {
-                let _ = IntelUpdated {
-                    newly_relevant: report.stats.newly_relevant,
+            if due_for_sync(&state).unwrap_or(false) {
+                // Échec silencieux (hors ligne, limite de débit) : le cache reste utilisable.
+                let _ = super::score::sync_mfa(&state).await;
+                if let Ok(report) = sync_catalogue(&state).await {
+                    let _ = IntelUpdated {
+                        newly_relevant: report.stats.newly_relevant,
+                    }
+                    .emit(&app);
+                    if report.stats.newly_relevant > 0 {
+                        notify(
+                            &app,
+                            &state,
+                            crate::scheduler::breach_message(report.stats.newly_relevant),
+                        );
+                    }
                 }
-                .emit(&app);
+            }
+            let rules = crate::scoring::Rules::v1();
+            let reminder = state.with_conn(|c| -> Option<(u32, f64)> {
+                let report = crate::actions::refresh(c, &rules).ok()?;
+                crate::insights::record_today(c, &report).ok()?;
+                if !crate::scheduler::notifications_enabled(c)
+                    || !crate::scheduler::weekly_reminder_due(c).ok()?
+                {
+                    return None;
+                }
+                let (pending, gain) = crate::insights::pending_summary(c, &rules).ok()?;
+                // Rien à signaler : on ne marque pas le rappel comme envoyé.
+                (pending > 0 && crate::scheduler::mark_reminder_sent(c).is_ok())
+                    .then_some((pending, gain))
+            });
+            if let Some(Some((pending, gain))) = reminder {
+                notify(
+                    &app,
+                    &state,
+                    crate::scheduler::reminder_message(pending, gain),
+                );
             }
         }
     });
+}
+
+fn notify(app: &AppHandle, state: &AppState, (title, body): (String, String)) {
+    use tauri_plugin_notification::NotificationExt;
+    if state.with_conn(crate::scheduler::notifications_enabled) != Some(true) {
+        return;
+    }
+    let _ = app.notification().builder().title(title).body(body).show();
 }
 
 fn due_for_sync(state: &AppState) -> Option<bool> {

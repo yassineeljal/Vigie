@@ -3,7 +3,7 @@ use specta::Type;
 
 macro_rules! str_enum {
     ($name:ident { $($variant:ident => $s:literal),+ $(,)? }) => {
-        #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Type)]
+        #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Type)]
         #[serde(rename_all = "snake_case")]
         pub enum $name { $($variant),+ }
         impl $name {

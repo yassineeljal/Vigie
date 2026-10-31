@@ -61,6 +61,15 @@ export const commands = {
 	importCheckLeaks: () => typedError<LeakCheckSummary, CommandError>(__TAURI_INVOKE("import_check_leaks")),
 	/**  Aperçu à jour de la session d'import (après la vérification des fuites). */
 	importPreview: () => typedError<ImportPreview_Serialize, CommandError>(__TAURI_INVOKE("import_preview")),
+	getDashboard: () => typedError<Dashboard_Serialize, CommandError>(__TAURI_INVOKE("get_dashboard")),
+	getScoreHistory: (days: number) => typedError<ScorePoint[], CommandError>(__TAURI_INVOKE("get_score_history", { days })),
+	getRecoveryGraph: () => typedError<GraphData_Serialize, CommandError>(__TAURI_INVOKE("get_recovery_graph")),
+	getNotificationsEnabled: () => typedError<boolean, CommandError>(__TAURI_INVOKE("get_notifications_enabled")),
+	/**
+	 *  Active ou désactive les notifications ; l'activation demande l'autorisation à macOS.
+	 *  Retourne l'état effectif (faux si l'autorisation est refusée).
+	 */
+	setNotificationsEnabled: (enabled: boolean) => typedError<boolean, CommandError>(__TAURI_INVOKE("set_notifications_enabled", { enabled })),
 	/**  Score global et score détaillé (facteurs et points) de chaque compte actif. */
 	getScoreReport: () => typedError<ScoreReport, CommandError>(__TAURI_INVOKE("get_score_report")),
 	listActions: (view: PlanView, status: ActionStatus) => typedError<ActionView[], CommandError>(__TAURI_INVOKE("list_actions", { view, status })),
@@ -270,6 +279,47 @@ export type CommandError = {
 
 export type Criticality = "critical" | "high" | "medium" | "low";
 
+export type CriticalityCount = {
+	criticality: Criticality,
+	count: number,
+};
+
+export type Dashboard = Dashboard_Serialize | Dashboard_Deserialize;
+
+export type Dashboard_Deserialize = {
+	score: number | null,
+	/**  Variation depuis le plus ancien point des 30 derniers jours (`None` sans historique). */
+	delta_30d?: number | null,
+	accounts_total: number,
+	by_criticality: CriticalityCount[],
+	risk_buckets: RiskBucket[],
+	without_mfa: number,
+	critical_without_strong_mfa: number,
+	top_factors: FactorCount[],
+	recent_breaches: BreachMatchView_Deserialize[],
+	top_actions: ActionView[],
+	pending_actions: number,
+	potential_gain: number | null,
+	history: ScorePoint[],
+};
+
+export type Dashboard_Serialize = {
+	score: number | null,
+	/**  Variation depuis le plus ancien point des 30 derniers jours (`None` sans historique). */
+	delta_30d: number | null,
+	accounts_total: number,
+	by_criticality: CriticalityCount[],
+	risk_buckets: RiskBucket[],
+	without_mfa: number,
+	critical_without_strong_mfa: number,
+	top_factors: FactorCount[],
+	recent_breaches: BreachMatchView_Serialize[],
+	top_actions: ActionView[],
+	pending_actions: number,
+	potential_gain: number | null,
+	history: ScorePoint[],
+};
+
 export type DuplicatePolicy = 
 /**  Ignorer les doublons. */
 "skip" | 
@@ -288,6 +338,11 @@ export type ErrorKind = "already_exists" | "not_found" | "bad_credentials" | "we
 
 export type Factor = "pwned_password" | "breach_after_change" | "reused_password" | "no_mfa" | "pivot_without_strong_mfa" | "weak_password" | "weak_mfa_only" | "unused_active" | "never_checked";
 
+export type FactorCount = {
+	factor: Factor,
+	accounts: number,
+};
+
 export type FactorHit = {
 	factor: Factor,
 	points: number,
@@ -305,6 +360,59 @@ export type FileInspection_Serialize = {
 	/**  Format reconnu automatiquement ; `None` → mappage de colonnes à fournir. */
 	format: ImportFormat | null,
 	headers: string[],
+};
+
+export type GraphData = GraphData_Serialize | GraphData_Deserialize;
+
+export type GraphData_Deserialize = {
+	nodes: GraphNode_Deserialize[],
+	edges: GraphEdge[],
+};
+
+export type GraphData_Serialize = {
+	nodes: GraphNode_Serialize[],
+	edges: GraphEdge[],
+};
+
+export type GraphEdge = {
+	from: string,
+	to: string,
+	/**  `recovery` (identité de récupération) ou `login` (identité de connexion, à défaut). */
+	via: string,
+};
+
+export type GraphNode = GraphNode_Serialize | GraphNode_Deserialize;
+
+export type GraphNode_Deserialize = {
+	/**  `a<id>` pour un compte, `i<id>` pour une identité non liée. */
+	id: string,
+	kind: NodeKind,
+	label: string,
+	criticality?: Criticality | null,
+	/**  Nombre de comptes qui dépendent de ce nœud. */
+	dependents: number,
+	/**  Compte pivot : récupère au moins 3 comptes. */
+	pivot: boolean,
+	/**  Point de défaillance unique : dépendants et aucune MFA forte (ou identité non protégée). */
+	single_point_of_failure: boolean,
+	/**  Niveau de profondeur pour la disposition (0 = ne dépend de personne). */
+	level: number,
+};
+
+export type GraphNode_Serialize = {
+	/**  `a<id>` pour un compte, `i<id>` pour une identité non liée. */
+	id: string,
+	kind: NodeKind,
+	label: string,
+	criticality: Criticality | null,
+	/**  Nombre de comptes qui dépendent de ce nœud. */
+	dependents: number,
+	/**  Compte pivot : récupère au moins 3 comptes. */
+	pivot: boolean,
+	/**  Point de défaillance unique : dépendants et aucune MFA forte (ou identité non protégée). */
+	single_point_of_failure: boolean,
+	/**  Niveau de profondeur pour la disposition (0 = ne dépend de personne). */
+	level: number,
 };
 
 export type Identity = Identity_Serialize | Identity_Deserialize;
@@ -418,6 +526,10 @@ export type MfaSyncReport = {
 	services_updated: number,
 };
 
+export type NodeKind = "account" | 
+/**  Courriel ou téléphone qui n'est lié à aucun compte de l'inventaire. */
+"unlinked_identity";
+
 export type PasswordCheckResult = {
 	breach_count: number,
 	strength: number,
@@ -475,6 +587,17 @@ export type PreviewItem_Serialize = {
 	/**  Identifiant de groupe de réutilisation (local à cet aperçu). */
 	reuse_group: number | null,
 	issue: string | null,
+};
+
+export type RiskBucket = {
+	/**  `low` (L < 25), `moderate` (< 50), `high` (< 75), `severe` (≥ 75) */
+	level: string,
+	count: number,
+};
+
+export type ScorePoint = {
+	taken_at: string,
+	score: number | null,
 };
 
 export type ScoreReport = {
