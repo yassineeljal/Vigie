@@ -54,6 +54,12 @@ fn ipc_builder() -> Builder<tauri::Wry> {
             commands::intel::check_identity_emails,
             commands::intel::import_check_leaks,
             commands::intel::import_preview,
+            commands::score::get_score_report,
+            commands::score::list_actions,
+            commands::score::complete_action,
+            commands::score::set_action_status,
+            commands::score::sync_mfa_directory,
+            commands::score::open_change_password,
         ])
         .events(collect_events![VaultLocked, commands::intel::IntelUpdated])
 }

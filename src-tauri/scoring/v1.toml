@@ -1,0 +1,32 @@
+# Règles de score v1 (docs/PLAN.md §6). Toute modification de poids = nouvelle version
+# (v2.toml) : chaque snapshot enregistre la version pour garder un historique comparable.
+version = "v1"
+
+[factors]                       # points de probabilité L (plafonnée à 100)
+pwned_password            = 45  # mot de passe présent dans Pwned Passwords
+breach_after_change       = 40  # brèche (avec mots de passe) postérieure au dernier changement, ou date inconnue
+reused_password           = 30
+no_mfa                    = 25
+pivot_without_strong_mfa  = 20  # compte qui récupère >= pivot.min_dependents comptes
+weak_password_low         = 20  # zxcvbn 0-1
+weak_password_mid         = 10  # zxcvbn 2
+weak_mfa_only             = 10  # SMS ou courriel seulement
+unused_active             = 10
+never_checked             = 5
+
+[criticality]                   # poids w
+critical = 1.0
+high     = 0.75
+medium   = 0.5
+low      = 0.25
+
+[pivot]
+min_dependents = 3
+
+[effort_minutes]
+change_password = 5
+change_password_after_breach = 10
+enable_mfa = 5
+upgrade_mfa = 5
+secure_pivot = 10
+delete_unused = 10

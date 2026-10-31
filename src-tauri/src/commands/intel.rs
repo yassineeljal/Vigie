@@ -187,6 +187,7 @@ pub fn spawn_scheduler(app: AppHandle) {
                 continue;
             }
             // Échec silencieux (hors ligne, limite de débit) : le cache reste utilisable.
+            let _ = super::score::sync_mfa(&state).await;
             if let Ok(report) = sync_catalogue(&state).await {
                 let _ = IntelUpdated {
                     newly_relevant: report.stats.newly_relevant,

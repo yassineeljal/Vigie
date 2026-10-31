@@ -20,8 +20,7 @@ pub const ALLOWED_HOSTS: [&str; 3] = [
 pub struct Endpoints {
     pub pwned: String,
     pub hibp: String,
-    /// Catalogue 2fa.directory (utilisé à partir du sprint 5).
-    #[allow(dead_code)]
+    /// Catalogue 2fa.directory.
     pub tfa: String,
 }
 

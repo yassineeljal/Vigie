@@ -3,6 +3,7 @@
 pub mod import;
 pub mod intel;
 pub mod inventory;
+pub mod score;
 pub mod state;
 pub mod vault;
 
