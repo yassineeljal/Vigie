@@ -30,7 +30,7 @@ class Boundary extends React.Component<{ children: React.ReactNode }, { error: u
     if (this.state.error) {
       const e = this.state.error;
       return (
-        <pre className="min-h-screen bg-zinc-950 p-4 whitespace-pre-wrap text-red-400">
+        <pre className="min-h-screen bg-bg p-4 whitespace-pre-wrap text-danger">
           {e instanceof Error ? `${e.name}: ${e.message}\n${e.stack ?? ""}` : String(e)}
         </pre>
       );

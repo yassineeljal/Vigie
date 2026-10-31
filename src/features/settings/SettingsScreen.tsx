@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { commands } from "../../lib/ipc";
 import { errorMessage, unwrap } from "../../lib/result";
 import { VAULT_KEY } from "../../lib/useVault";
-import { Button, ErrorText, Field } from "../../components/ui";
+import { Button, ErrorText, Field, PageHeader } from "../../components/ui";
 import { DataSection } from "./DataSection";
 import { StrengthMeter } from "../unlock/StrengthMeter";
 import { t, useLang, type Lang } from "../../i18n";
@@ -59,10 +59,10 @@ export function SettingsScreen({ autoLockMinutes }: { autoLockMinutes: number })
 
   return (
     <section className="space-y-8">
-      <h2 className="text-xl font-semibold">{t("Réglages")}</h2>
+      <PageHeader title={t("Réglages")} />
 
       <div className="space-y-2">
-        <label htmlFor="language" className="block text-sm text-zinc-300">
+        <label htmlFor="language" className="block text-sm text-ink">
           Langue / Language
         </label>
         <select
@@ -73,7 +73,7 @@ export function SettingsScreen({ autoLockMinutes }: { autoLockMinutes: number })
             setLang(next);
             void commands.setLanguage(next);
           }}
-          className="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
+          className="rounded-md border border-line bg-surface px-3 py-2 text-sm"
         >
           <option value="fr">Français</option>
           <option value="en">English</option>
@@ -81,14 +81,14 @@ export function SettingsScreen({ autoLockMinutes }: { autoLockMinutes: number })
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="auto-lock" className="block text-sm text-zinc-300">
+        <label htmlFor="auto-lock" className="block text-sm text-ink">
           {t("Verrouillage automatique après inactivité")}
         </label>
         <select
           id="auto-lock"
           value={autoLockMinutes}
           onChange={(e) => void changeDelay(Number(e.target.value))}
-          className="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
+          className="rounded-md border border-line bg-surface px-3 py-2 text-sm"
         >
           {DELAYS.map((d) => (
             <option key={d.value} value={d.value}>
@@ -99,7 +99,7 @@ export function SettingsScreen({ autoLockMinutes }: { autoLockMinutes: number })
       </div>
 
       <div className="space-y-1">
-        <label className="flex items-center gap-2 text-sm text-zinc-300">
+        <label className="flex items-center gap-2 text-sm text-ink">
           <input
             type="checkbox"
             checked={notif.data ?? false}
@@ -107,7 +107,7 @@ export function SettingsScreen({ autoLockMinutes }: { autoLockMinutes: number })
           />
           {t("Notifications macOS (nouvelle brèche pertinente, rappel hebdomadaire)")}
         </label>
-        <p className="text-xs text-zinc-500">
+        <p className="text-xs text-muted">
           {t(
             "Les notifications n'affichent jamais de noms de comptes. Elles ne partent que lorsque le coffre est déverrouillé.",
           )}
@@ -116,7 +116,7 @@ export function SettingsScreen({ autoLockMinutes }: { autoLockMinutes: number })
       </div>
 
       <form onSubmit={changePassword} className="max-w-sm space-y-3">
-        <h3 className="text-sm font-medium text-zinc-300">{t("Changer le mot de passe maître")}</h3>
+        <h3 className="text-sm font-medium text-ink">{t("Changer le mot de passe maître")}</h3>
         <Field
           label={t("Mot de passe actuel")}
           type="password"
@@ -132,7 +132,7 @@ export function SettingsScreen({ autoLockMinutes }: { autoLockMinutes: number })
         <StrengthMeter password={newPw} />
         {msg &&
           (msg.ok ? (
-            <p className="text-sm text-emerald-400">{msg.text}</p>
+            <p className="text-sm text-safe">{msg.text}</p>
           ) : (
             <ErrorText>{msg.text}</ErrorText>
           ))}

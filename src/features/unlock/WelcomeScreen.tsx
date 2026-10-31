@@ -39,14 +39,14 @@ export function WelcomeScreen({
           aria-label="Langue / Language"
           value={lang}
           onChange={(e) => setLang(e.target.value as Lang)}
-          className="rounded-lg border border-zinc-700 bg-zinc-950 px-2 py-1 text-xs"
+          className="rounded-md border border-line bg-surface px-2 py-1 text-xs"
         >
           <option value="fr">Français</option>
           <option value="en">English</option>
         </select>
       </div>
-      <p className="text-sm leading-relaxed text-zinc-300">{t(step.body)}</p>
-      <p className="text-xs text-zinc-500" aria-live="polite">
+      <p className="text-sm leading-relaxed text-ink">{t(step.body)}</p>
+      <p className="text-xs text-muted" aria-live="polite">
         {t("Étape {n} sur {total}", { n: i + 1, total: STEPS.length })}
       </p>
       <div className="flex items-center justify-between">

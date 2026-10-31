@@ -45,8 +45,7 @@ function toInput(a: Account): AccountInput {
   };
 }
 
-const selectCls =
-  "w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100";
+const selectCls = "w-full rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink";
 
 export function AccountForm({
   account,
@@ -134,7 +133,7 @@ export function AccountForm({
     >
       <form
         onSubmit={submit}
-        className="h-full w-full max-w-md space-y-4 overflow-y-auto border-l border-zinc-800 bg-zinc-900 p-6"
+        className="h-full w-full max-w-md space-y-4 overflow-y-auto border-l border-line bg-surface p-6"
       >
         <h2 className="text-xl font-semibold">
           {account ? t("Modifier le compte") : t("Nouveau compte")}
@@ -147,7 +146,7 @@ export function AccountForm({
           autoFocus
         />
         {domainInput && (
-          <p className="-mt-2 text-xs text-zinc-400" data-testid="domain-preview">
+          <p className="-mt-2 text-xs text-muted" data-testid="domain-preview">
             {preview ? t("Domaine : {preview}", { preview }) : t("Domaine invalide")}
           </p>
         )}
@@ -163,7 +162,7 @@ export function AccountForm({
         />
 
         <label className="block space-y-1 text-sm">
-          <span className="text-zinc-300">{t("Identité de connexion")}</span>
+          <span className="text-ink">{t("Identité de connexion")}</span>
           <select
             className={selectCls}
             value={f.identity_id ?? ""}
@@ -174,7 +173,7 @@ export function AccountForm({
           </select>
         </label>
         <label className="block space-y-1 text-sm">
-          <span className="text-zinc-300">{t("Identité de récupération")}</span>
+          <span className="text-ink">{t("Identité de récupération")}</span>
           <select
             className={selectCls}
             value={f.recovery_identity_id ?? ""}
@@ -187,7 +186,7 @@ export function AccountForm({
 
         <div className="grid grid-cols-2 gap-3">
           <label className="block space-y-1 text-sm">
-            <span className="text-zinc-300">{t("Criticité")}</span>
+            <span className="text-ink">{t("Criticité")}</span>
             <select
               className={selectCls}
               value={f.criticality}
@@ -201,7 +200,7 @@ export function AccountForm({
             </select>
           </label>
           <label className="block space-y-1 text-sm">
-            <span className="text-zinc-300">{t("Statut")}</span>
+            <span className="text-ink">{t("Statut")}</span>
             <select
               className={selectCls}
               value={f.status}
@@ -224,7 +223,7 @@ export function AccountForm({
         />
 
         <fieldset className="space-y-2">
-          <legend className="text-sm text-zinc-300">{t("Méthodes MFA")}</legend>
+          <legend className="text-sm text-ink">{t("Méthodes MFA")}</legend>
           {MFA_KINDS.map((k) => (
             <div key={k} className="flex items-center justify-between text-sm">
               <label className="flex items-center gap-2">
@@ -232,7 +231,7 @@ export function AccountForm({
                 {t(MFA_LABELS[k])}
               </label>
               {hasMfa(k) && (
-                <label className="flex items-center gap-2 text-xs text-zinc-400">
+                <label className="flex items-center gap-2 text-xs text-muted">
                   <input
                     type="checkbox"
                     checked={hasMfa(k)!.backup_codes}
@@ -251,7 +250,7 @@ export function AccountForm({
           onChange={(e) => setTags(e.target.value)}
         />
         <label className="block space-y-1 text-sm">
-          <span className="text-zinc-300">{t("Notes (jamais de mot de passe)")}</span>
+          <span className="text-ink">{t("Notes (jamais de mot de passe)")}</span>
           <textarea
             className={selectCls}
             rows={3}

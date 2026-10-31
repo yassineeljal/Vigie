@@ -1,13 +1,104 @@
 @import "tailwindcss";
+@import "@fontsource/instrument-sans/400.css";
+@import "@fontsource/instrument-sans/500.css";
+@import "@fontsource/instrument-sans/600.css";
+@import "@fontsource/instrument-serif/400.css";
+
+/*
+ * Jetons de couleur : « carte marine » le jour, « quart de nuit » la nuit.
+ * Les composants n'utilisent que ces noms sémantiques (bg-bg, text-muted, text-danger…).
+ */
+:root {
+  --bg: #f3f5f7;
+  --surface: #ffffff;
+  --sunken: #e9edf1;
+  --ink: #0e1a2b;
+  --muted: #566679;
+  --line: #d5dce4;
+  --primary: #123a5e;
+  --on-primary: #ffffff;
+  --safe: #17775b;
+  --safe-bg: #dff3ec;
+  --warn: #946500;
+  --warn-bg: #fbefcd;
+  --danger: #c23a1b;
+  --danger-bg: #fbe3dc;
+  --link: #1b5f96;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b1522;
+    --surface: #112033;
+    --sunken: #0d1a2b;
+    --ink: #e7eef6;
+    --muted: #93a6bb;
+    --line: #24384f;
+    --primary: #8cc4f2;
+    --on-primary: #08121e;
+    --safe: #3ccb9b;
+    --safe-bg: #0f3a31;
+    --warn: #f0b429;
+    --warn-bg: #3d3010;
+    --danger: #ff7a59;
+    --danger-bg: #44190f;
+    --link: #8cc4f2;
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-sunken: var(--sunken);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-primary: var(--primary);
+  --color-on-primary: var(--on-primary);
+  --color-safe: var(--safe);
+  --color-safe-bg: var(--safe-bg);
+  --color-warn: var(--warn);
+  --color-warn-bg: var(--warn-bg);
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
+  --color-link: var(--link);
+  --font-sans: "Instrument Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: "Instrument Serif", ui-serif, Georgia, serif;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
 
 /* Navigation clavier (US-74, NFR-09) : focus toujours visible. */
-:where(select, input[type="checkbox"], summary, [role="listitem"]):focus-visible {
-  outline: 2px solid #34d399;
+:where(a, button, select, input, textarea, summary, [role="listitem"], [tabindex]):focus-visible {
+  outline: 2px solid var(--link);
   outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
 }
 
 @media print {
   body {
     background: white !important;
+    color: black !important;
   }
 }

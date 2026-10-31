@@ -4,6 +4,7 @@ import { Background, Controls, MarkerType, ReactFlow, type Edge, type Node } fro
 import "@xyflow/react/dist/style.css";
 import { commands, type GraphData, type GraphNode } from "../../lib/ipc";
 import { unwrap } from "../../lib/result";
+import { Empty, PageHeader } from "../../components/ui";
 import { CRITICALITY_LABELS } from "../../lib/labels";
 import { t } from "../../i18n";
 
@@ -11,9 +12,9 @@ const COL = 300;
 const ROW = 90;
 
 function borderFor(n: GraphNode): string {
-  if (n.single_point_of_failure) return "#ef4444";
-  if (n.pivot) return "#f59e0b";
-  return "#3f3f46";
+  if (n.single_point_of_failure) return "var(--danger)";
+  if (n.pivot) return "var(--warn)";
+  return "var(--line)";
 }
 
 function describe(n: GraphNode): string {
@@ -40,8 +41,8 @@ export function layout(data: GraphData): { nodes: Node[]; edges: Edge[] } {
       data: { label: `${n.label}${n.dependents ? ` (${n.dependents})` : ""}` },
       ariaLabel: describe(n),
       style: {
-        background: n.kind === "unlinked_identity" ? "#27272a" : "#18181b",
-        color: "#f4f4f5",
+        background: n.kind === "unlinked_identity" ? "var(--sunken)" : "var(--surface)",
+        color: "var(--ink)",
         border: `2px ${n.kind === "unlinked_identity" ? "dashed" : "solid"} ${borderFor(n)}`,
         borderRadius: 12,
         padding: 10,
@@ -56,9 +57,9 @@ export function layout(data: GraphData): { nodes: Node[]; edges: Edge[] } {
     target: e.to,
     label: e.via === "recovery" ? "récupération" : "connexion",
     markerEnd: { type: MarkerType.ArrowClosed },
-    style: { stroke: "#71717a" },
-    labelStyle: { fill: "#a1a1aa", fontSize: 11 },
-    labelBgStyle: { fill: "#09090b" },
+    style: { stroke: "var(--muted)" },
+    labelStyle: { fill: "var(--muted)", fontSize: 11 },
+    labelBgStyle: { fill: "var(--bg)" },
   }));
   return { nodes, edges };
 }
@@ -74,34 +75,31 @@ export function GraphScreen() {
   const critical = data.nodes.filter((n) => n.pivot || n.single_point_of_failure);
   return (
     <section className="flex h-full flex-col gap-4">
-      <div>
-        <h2 className="text-xl font-semibold">{t("Graphe de récupération")}</h2>
-        <p className="text-sm text-zinc-400">
-          {t(
-            "Une flèche va d'un compte vers celui dont il dépend pour être récupéré (ex. ton courriel). Si le nœud de droite tombe, tout ce qui pointe vers lui tombe aussi.",
-          )}{" "}
-          <span className="text-amber-400">{t("Orange : compte pivot")}</span> ·{" "}
-          <span className="text-red-400">{t("Rouge : point de défaillance unique")}</span>{" "}
-          {t("· Pointillés : identité hors inventaire.")}
-        </p>
-      </div>
+      <PageHeader title={t("Graphe de récupération")}>
+        {t(
+          "Une flèche va d'un compte vers celui dont il dépend pour être récupéré (ex. ton courriel). Si le nœud de droite tombe, tout ce qui pointe vers lui tombe aussi.",
+        )}{" "}
+        <span className="text-warn">{t("Orange : compte pivot")}</span> ·{" "}
+        <span className="text-danger">{t("Rouge : point de défaillance unique")}</span>{" "}
+        {t("· Pointillés : identité hors inventaire.")}
+      </PageHeader>
       {data.nodes.length === 0 ? (
-        <p className="text-sm text-zinc-500">
+        <Empty>
           {t(
             "Aucune dépendance à afficher. Renseigne les identités de connexion/récupération de tes comptes et lie chaque courriel à son compte (onglet Identités).",
           )}
-        </p>
+        </Empty>
       ) : (
         <>
           <div
-            className="min-h-0 flex-1 rounded-xl border border-zinc-800"
+            className="min-h-0 flex-1 rounded-xl border border-line"
             aria-label={t("Graphe interactif")}
           >
             <ReactFlow
               nodes={flow.nodes}
               edges={flow.edges}
               fitView
-              colorMode="dark"
+              colorMode="system"
               nodesConnectable={false}
             >
               <Background />
@@ -109,13 +107,13 @@ export function GraphScreen() {
             </ReactFlow>
           </div>
           <div aria-label={t("Alternative textuelle")}>
-            <h3 className="text-sm font-medium text-zinc-300">{t("Points sensibles")}</h3>
+            <h3 className="text-sm font-medium text-ink">{t("Points sensibles")}</h3>
             {critical.length === 0 ? (
-              <p className="text-sm text-emerald-400">
+              <p className="text-sm text-safe">
                 {t("Aucun pivot ni point de défaillance unique détecté.")}
               </p>
             ) : (
-              <ul className="list-inside list-disc text-sm text-zinc-300">
+              <ul className="list-inside list-disc text-sm text-ink">
                 {critical.map((n) => (
                   <li key={n.id}>{describe(n)}</li>
                 ))}

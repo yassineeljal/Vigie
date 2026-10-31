@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { commands, events } from "../../lib/ipc";
 import { errorMessage, unwrap } from "../../lib/result";
-import { Button, ErrorText, Field } from "../../components/ui";
+import { Button, ErrorText, Field, PageHeader } from "../../components/ui";
 import { t } from "../../i18n";
 
 const STRENGTH = ["très faible", "faible", "moyen", "bon", "excellent"];
@@ -26,7 +26,7 @@ export function BreachesScreen() {
   useRefreshOnIntelUpdate();
   return (
     <section className="max-w-4xl space-y-8 overflow-y-auto pb-8">
-      <h2 className="text-xl font-semibold">{t("Brèches")}</h2>
+      <PageHeader title={t("Brèches")} />
       <CatalogueCard />
       <MatchesList />
       <PasswordChecker />
@@ -54,15 +54,15 @@ function CatalogueCard() {
   });
   if (!status) return null;
   return (
-    <div className="space-y-3 rounded-xl border border-zinc-800 p-4">
-      <p className="text-sm text-zinc-300">
+    <div className="space-y-3 rounded-xl border border-line p-4">
+      <p className="text-sm text-ink">
         {status.breaches_synced_at
           ? t("Catalogue public synchronisé le {n1} ({breach_count} brèches).", {
               n1: status.breaches_synced_at.slice(0, 10),
               breach_count: status.breach_count,
             })
           : t("Catalogue public jamais synchronisé.")}{" "}
-        <span className="text-zinc-500">
+        <span className="text-muted">
           {t("Le téléchargement n'envoie aucune donnée de ton inventaire.")}
         </span>
       </p>
@@ -70,7 +70,7 @@ function CatalogueCard() {
         <Button disabled={sync.isPending || status.offline_mode} onClick={() => sync.mutate()}>
           {sync.isPending ? t("Synchronisation…") : t("Synchroniser")}
         </Button>
-        <label className="flex items-center gap-2 text-sm text-zinc-300">
+        <label className="flex items-center gap-2 text-sm text-ink">
           <input
             type="checkbox"
             checked={status.offline_mode}
@@ -80,7 +80,7 @@ function CatalogueCard() {
         </label>
       </div>
       {sync.data && (
-        <p className="text-sm text-emerald-400">
+        <p className="text-sm text-safe">
           {sync.data.breaches} {t("brèches en cache ·")} {sync.data.stats.relevant}{" "}
           {t("pertinente(s) pour tes comptes.")}
         </p>
@@ -107,14 +107,14 @@ function MatchesList() {
   const relevant = matches.filter((m) => m.relevant && !m.acknowledged_at);
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-medium text-zinc-300">
+      <h3 className="text-sm font-medium text-ink">
         {t("Comptes concernés (")}
         {relevant.length} {t("à traiter sur")} {matches.length})
       </h3>
       {matches.length === 0 ? (
-        <p className="text-sm text-zinc-500">{t("Aucune brèche connue ne touche tes comptes.")}</p>
+        <p className="text-sm text-muted">{t("Aucune brèche connue ne touche tes comptes.")}</p>
       ) : (
-        <ul className="divide-y divide-zinc-800 rounded-xl border border-zinc-800">
+        <ul className="divide-y divide-zinc-800 rounded-xl border border-line">
           {matches.map((m) => (
             <li
               key={`${m.breach_name}-${m.account_id}-${m.kind}`}
@@ -122,22 +122,22 @@ function MatchesList() {
             >
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium">
-                  {m.account_label} <span className="text-zinc-500">· {m.title}</span>
+                  {m.account_label} <span className="text-muted">· {m.title}</span>
                 </p>
-                <p className="truncate text-xs text-zinc-400">
+                <p className="truncate text-xs text-muted">
                   {m.breach_date ?? t("date inconnue")} · {m.data_classes.join(", ")} ·{" "}
                   {m.kind === "email" ? t("via ton courriel") : t("via le domaine")}
                 </p>
               </div>
               {m.relevant ? (
-                <span className="text-xs text-red-400">
+                <span className="text-xs text-danger">
                   {t("Brèche postérieure au dernier changement")}
                 </span>
               ) : (
-                <span className="text-xs text-zinc-500">{t("Probablement sans impact")}</span>
+                <span className="text-xs text-muted">{t("Probablement sans impact")}</span>
               )}
               {m.acknowledged_at ? (
-                <span className="text-xs text-zinc-500">{t("Acquittée")}</span>
+                <span className="text-xs text-muted">{t("Acquittée")}</span>
               ) : (
                 <Button variant="ghost" onClick={() => ack.mutate(m)}>
                   {t("Acquitter")}
@@ -168,15 +168,15 @@ function PasswordChecker() {
   });
   return (
     <form
-      className="max-w-md space-y-3 rounded-xl border border-zinc-800 p-4"
+      className="max-w-md space-y-3 rounded-xl border border-line p-4"
       onSubmit={(e) => {
         e.preventDefault();
         check.mutate(pw);
         setPw(""); // vidé immédiatement : jamais gardé dans l'état React
       }}
     >
-      <h3 className="text-sm font-medium text-zinc-300">{t("Vérifier un mot de passe")}</h3>
-      <p className="text-xs text-zinc-500">
+      <h3 className="text-sm font-medium text-ink">{t("Vérifier un mot de passe")}</h3>
+      <p className="text-xs text-muted">
         {t(
           "Seuls les 5 premiers caractères de son empreinte SHA-1 sont envoyés (k-anonymat). Le mot de passe n'est ni enregistré ni envoyé.",
         )}
@@ -194,7 +194,7 @@ function PasswordChecker() {
       {result && (
         <p
           role="status"
-          className={`text-sm ${result.breach_count > 0 ? "text-red-400" : "text-emerald-400"}`}
+          className={`text-sm ${result.breach_count > 0 ? "text-danger" : "text-safe"}`}
         >
           {result.breach_count > 0
             ? t("Trouvé {n1} fois dans des fuites.", {
@@ -234,11 +234,9 @@ function EmailCard() {
   });
   if (!status) return null;
   return (
-    <div className="max-w-xl space-y-3 rounded-xl border border-zinc-800 p-4">
-      <h3 className="text-sm font-medium text-zinc-300">
-        {t("Vérification par courriel (optionnel)")}
-      </h3>
-      <p className="text-xs text-amber-300">
+    <div className="max-w-xl space-y-3 rounded-xl border border-line p-4">
+      <h3 className="text-sm font-medium text-ink">{t("Vérification par courriel (optionnel)")}</h3>
+      <p className="text-xs text-warn">
         {t("Contrairement aux autres vérifications, tes courriels sont envoyés")}{" "}
         <strong>{t("en clair")}</strong>{" "}
         {t(
@@ -281,7 +279,7 @@ function EmailCard() {
         </form>
       )}
       {run.data && (
-        <p className="text-sm text-emerald-400">
+        <p className="text-sm text-safe">
           {run.data.checked} {t("courriel(s) vérifié(s),")} {run.data.breached} {t("touché(s),")}{" "}
           {run.data.matches} {t("compte(s) concerné(s).")}
         </p>
